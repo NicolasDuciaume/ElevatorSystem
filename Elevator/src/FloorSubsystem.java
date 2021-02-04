@@ -27,6 +27,7 @@ public class FloorSubsystem implements Runnable{
     public void run() {
         while(true){
             scheduler.recieveFromFloor(Data);
+            Data = "";
             Data = scheduler.sendToFloor();
             try {
                 Thread.sleep(500); // change to 100 to see difference
