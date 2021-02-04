@@ -1,3 +1,5 @@
+package Elevator.src;
+
 import java.util.*;
 
 /**
@@ -11,6 +13,9 @@ public class Schedular {
 	
 	private Queue<Object> upQueue;
 	private Queue<Object> downQueue;
+	private String data;
+	private boolean emptyFloor = true;
+	private boolean emptyElevator = true;
 	
 	public Schedular(){
 		upQueue = new PriorityQueue<>();
@@ -46,8 +51,8 @@ public class Schedular {
 	 * @param
 	 * @param
 	 */
-	public synchronized void sendToFloor() {
-		
+	public synchronized String sendToFloor() {
+		return "";
 	}
 	
 	/**
@@ -57,8 +62,8 @@ public class Schedular {
 	 * @param
 	 * @param
 	 */
-	public synchronized void sendToElevator() {
-		
+	public synchronized String sendToElevator() {
+		return "";
 	}
 	
 	/**

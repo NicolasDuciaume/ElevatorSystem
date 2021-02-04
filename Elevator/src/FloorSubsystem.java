@@ -1,12 +1,14 @@
+package Elevator.src;
+
 import java.io.File;  // Import the File class
 import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.util.Scanner;
 public class FloorSubsystem implements Runnable{
 
     private String Data;
-    private Scheduler scheduler;
+    private Schedular scheduler;
 
-    public FloorSubsystem(String FileLocation, Scheduler scheduler){
+    public FloorSubsystem(String FileLocation, Schedular scheduler){
         this.scheduler = scheduler;
         try {
             File myObj = new File(FileLocation);
@@ -24,8 +26,8 @@ public class FloorSubsystem implements Runnable{
     @Override
     public void run() {
         while(true){
-            scheduler.putFloorData(Data);
-            Data = scheduler.getElevatorData();
+            scheduler.recieveFromFloor(Data);
+            Data = scheduler.sendToFloor();
             try {
                 Thread.sleep(500); // change to 100 to see difference
             } catch (InterruptedException e) {}
