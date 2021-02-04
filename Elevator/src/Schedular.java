@@ -24,12 +24,12 @@ public class Schedular {
 	
 	/**
 	 * Receives data from the floor
-	 * 
+	 *  @param
 	 * @param
 	 * @param
-	 * @param
+	 * @param data
 	 */
-	public synchronized void recieveFromFloor() {
+	public synchronized void recieveFromFloor(String data) {
 		
 	}
 	
