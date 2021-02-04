@@ -1,5 +1,3 @@
-package Elevator.src;
-
 import java.util.*;
 
 /**
@@ -9,7 +7,7 @@ import java.util.*;
  *	@author Tooba Sheikh
  * 
  */
-public class Schedular {
+public class Scheduler {
 	
 	private Queue<Object> upQueue;
 	private Queue<Object> downQueue;
@@ -18,7 +16,7 @@ public class Schedular {
 	private boolean emptyFloor = true;
 	private boolean emptyElevator = true;
 	
-	public Schedular(){
+	public Scheduler(){
 		upQueue = new PriorityQueue<>();
 		downQueue = new PriorityQueue<>();
 	}

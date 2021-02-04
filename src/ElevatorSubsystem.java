@@ -1,29 +1,27 @@
-package Elevator.src;
-
 import java.util.*;
 
 /**
- *
  * @author Nazifa Tanzim, 101074707
- * @author Chris D'Silva
+ * @author Chris D'Silva, 101067295
  *
  */
 public class ElevatorSubsystem implements Runnable{
+	
     private String location;
-
 
     private enum motor{
         UP, DOWN, STOPPED;
     };
+    
     // maybe we'll change this to a list of Button objects
     private List<Integer> buttons = new ArrayList<Integer>();
     private List<Boolean> elevatorLamps = new ArrayList<Boolean>();
     private boolean arrivalLamp;
 
     private String data;
-    private Schedular scheduler;
+    private Scheduler scheduler;
 
-    public ElevatorSubsystem(Schedular scheduler) {
+    public ElevatorSubsystem(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
