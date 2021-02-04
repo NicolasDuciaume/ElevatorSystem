@@ -7,7 +7,7 @@ import java.util.*;
  * @author Tooba Sheikh 101028915
  * 
  */
-public class Schedular {
+public class Scheduler {
 	
 	//store the floors below and above current floor
 	private Queue<Object> upQueue;
@@ -21,7 +21,7 @@ public class Schedular {
 	private boolean emptyFloor = true;
 	private boolean emptyElevator = true;
 	
-	public Schedular(){
+	public Scheduler(){
 		upQueue = new PriorityQueue<>();
 		downQueue = new PriorityQueue<>();
 	}

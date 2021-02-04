@@ -1,6 +1,7 @@
 import java.util.*;
 
 /**
+<<<<<<< HEAD:Elevator/src/ElevatorSubsystem.java
  * Elevator class that receives and sends data from the scheduler
  * Data will contain elevator direction and floor number
  *
@@ -14,6 +15,16 @@ public class ElevatorSubsystem implements Runnable{
 	private String location;
 
 	//Denotes the states of the elevator 
+=======
+ * @author Nazifa Tanzim, 101074707
+ * @author Chris D'Silva, 101067295
+ *
+ */
+public class ElevatorSubsystem implements Runnable{
+	
+    private String location;
+
+>>>>>>> Restructed project folders:src/ElevatorSubsystem.java
     private enum motor{
         UP, DOWN, STOPPED;
     };
@@ -23,6 +34,7 @@ public class ElevatorSubsystem implements Runnable{
     private List<Boolean> elevatorLamps = new ArrayList<Boolean>(); //List of lamps
     private boolean arrivalLamp; //true if lap should be lit up
 
+<<<<<<< HEAD:Elevator/src/ElevatorSubsystem.java
     private String data; // info received from the Scheduler
     private Schedular scheduler; //Scheduler object used to receive and pass data
 
@@ -30,6 +42,12 @@ public class ElevatorSubsystem implements Runnable{
      * Instantiates the variables  
      */
     public ElevatorSubsystem(Schedular scheduler) {
+=======
+    private String data;
+    private Scheduler scheduler;
+
+    public ElevatorSubsystem(Scheduler scheduler) {
+>>>>>>> Restructed project folders:src/ElevatorSubsystem.java
         this.scheduler = scheduler;
     }
 
