@@ -42,11 +42,13 @@ public class ElevatorSubsystem implements Runnable{
     @Override
     public void run() {
         while(true){
-            data = scheduler.sendToFloor();
-            scheduler.recieveFromFloor(data);
+            data = scheduler.sendToElevator();
+            System.out.println("Elevator Received: " + data);
+            scheduler.recieveFromElevator(data);
+            System.out.println("Elevator Sent: " + data);
             data = "";
             try {
-                Thread.sleep(500); // change to 100 to see difference
+                Thread.sleep(1500); // change to 100 to see difference
             } catch (InterruptedException e) {}
         }
     }

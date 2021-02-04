@@ -27,10 +27,12 @@ public class FloorSubsystem implements Runnable{
     public void run() {
         while(true){
             scheduler.recieveFromFloor(Data);
+            System.out.println("Floor Sent: " + Data);
             Data = "";
             Data = scheduler.sendToFloor();
+            System.out.println("Floor Received: " + Data);
             try {
-                Thread.sleep(500); // change to 100 to see difference
+                Thread.sleep(1500); // change to 100 to see difference
             } catch (InterruptedException e) {}
         }
     }

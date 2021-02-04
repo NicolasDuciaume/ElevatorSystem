@@ -13,7 +13,8 @@ public class Schedular {
 	
 	private Queue<Object> upQueue;
 	private Queue<Object> downQueue;
-	private String data;
+	private String dataFloor = "";
+	private String dataElevator = "";
 	private boolean emptyFloor = true;
 	private boolean emptyElevator = true;
 	
@@ -30,14 +31,14 @@ public class Schedular {
 	 * @param data
 	 */
 	public synchronized void recieveFromFloor(String data) {
-		while (!emptyFloor) {
+		while (!dataFloor.equals("")) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				return;
 			}
 		}
-		this.data = data;
+		this.dataFloor = data;
 		emptyFloor = false;
 		notifyAll();
 	}
@@ -50,14 +51,14 @@ public class Schedular {
 	 * @param
 	 */
 	public synchronized void recieveFromElevator(String data) {
-		while (!emptyElevator) {
+		while (!dataElevator.equals("")) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				return;
 			}
 		}
-		this.data = data;
+		this.dataElevator = data;
 		emptyElevator = false;
 		notifyAll();
 	}
@@ -70,15 +71,15 @@ public class Schedular {
 	 * @param
 	 */
 	public synchronized String sendToFloor() {
-		while (emptyFloor) {
+		while (dataElevator.equals("")) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				return null;
 			}
 		}
-		String temp = data;
-		data = "";
+		String temp = dataElevator;
+		dataElevator = "";
 		emptyFloor = true;
 		notifyAll();
 		return temp;
@@ -92,15 +93,15 @@ public class Schedular {
 	 * @param
 	 */
 	public synchronized String sendToElevator() {
-		while (emptyElevator) {
+		while (dataFloor.equals("")) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				return null;
 			}
 		}
-		String temp = data;
-		data = "";
+		String temp = dataFloor;
+		dataFloor = "";
 		emptyElevator = true;
 		notifyAll();
 		return temp;
