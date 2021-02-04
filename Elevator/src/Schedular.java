@@ -30,7 +30,16 @@ public class Schedular {
 	 * @param data
 	 */
 	public synchronized void recieveFromFloor(String data) {
-		
+		while (!emptyFloor) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				return;
+			}
+		}
+		this.data = data;
+		emptyFloor = false;
+		notifyAll();
 	}
 	
 	/**
@@ -40,8 +49,17 @@ public class Schedular {
 	 * @param
 	 * @param
 	 */
-	public synchronized void recieveFromElevator() {
-		
+	public synchronized void recieveFromElevator(String data) {
+		while (!emptyElevator) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				return;
+			}
+		}
+		this.data = data;
+		emptyElevator = false;
+		notifyAll();
 	}
 	
 	/**
@@ -52,7 +70,18 @@ public class Schedular {
 	 * @param
 	 */
 	public synchronized String sendToFloor() {
-		return "";
+		while (emptyFloor) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				return null;
+			}
+		}
+		String temp = data;
+		data = "";
+		emptyFloor = true;
+		notifyAll();
+		return temp;
 	}
 	
 	/**
@@ -63,7 +92,18 @@ public class Schedular {
 	 * @param
 	 */
 	public synchronized String sendToElevator() {
-		return "";
+		while (emptyElevator) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				return null;
+			}
+		}
+		String temp = data;
+		data = "";
+		emptyElevator = true;
+		notifyAll();
+		return temp;
 	}
 	
 	/**
