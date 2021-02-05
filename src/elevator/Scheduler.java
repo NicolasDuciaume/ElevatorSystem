@@ -119,9 +119,12 @@ public class Scheduler {
 		
 	}
 	
+<<<<<<< HEAD:src/elevator/Scheduler.java
 <<<<<<< HEAD:src/Scheduler.java
 }
 =======
+=======
+>>>>>>> b1870a3bfe4aa225991e14e182e784c9bbd75747:Elevator/src/Schedular.java
 	public String getDataFloor() {
 		return this.dataFloor;
 	}
