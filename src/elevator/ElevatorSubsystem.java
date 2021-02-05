@@ -1,3 +1,4 @@
+package elevator;
 import java.util.*;
 
 /**
@@ -23,6 +24,7 @@ public class ElevatorSubsystem implements Runnable{
 
     public ElevatorSubsystem(Scheduler scheduler) {
         this.scheduler = scheduler;
+        this.data = "";
     }
 
     private void setArrivalLamp() {

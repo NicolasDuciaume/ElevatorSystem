@@ -1,3 +1,4 @@
+package elevator;
 import java.util.*;
 
 /**
@@ -111,6 +112,22 @@ public class Scheduler {
 	 */
 	public synchronized void checkPriority() {
 		
+	}
+	
+	public String getDataFloor() {
+		return this.dataFloor;
+	}
+	
+	public String getDataElevator() {
+		return this.dataElevator;
+	}
+	
+	public boolean isEmptyFloor() {
+		return this.emptyFloor;
+	}
+	
+	public boolean isEmptyElevator() {
+		return this.emptyElevator;
 	}
 	
 }
