@@ -1,3 +1,4 @@
+package elevator;
 import java.util.*;
 
 /**
@@ -118,4 +119,24 @@ public class Scheduler {
 		
 	}
 	
+<<<<<<< HEAD:src/Scheduler.java
 }
+=======
+	public String getDataFloor() {
+		return this.dataFloor;
+	}
+	
+	public String getDataElevator() {
+		return this.dataElevator;
+	}
+	
+	public boolean isEmptyFloor() {
+		return this.emptyFloor;
+	}
+	
+	public boolean isEmptyElevator() {
+		return this.emptyElevator;
+	}
+	
+}
+>>>>>>> Added JUnit tests:src/elevator/Scheduler.java

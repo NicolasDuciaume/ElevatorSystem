@@ -1,3 +1,4 @@
+<<<<<<< HEAD:src/FloorSubsystem.java
 <<<<<<< HEAD:Elevator/src/FloorSubsystem.java
 
 import java.io.File;  // Import the File class
@@ -24,6 +25,9 @@ public class FloorSubsystem implements Runnable{
      */
     public FloorSubsystem(String FileLocation, Schedular scheduler){
 =======
+=======
+package elevator;
+>>>>>>> Added JUnit tests:src/elevator/FloorSubsystem.java
 import java.io.File;  // Import the File class
 import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.util.Scanner;
