@@ -5,12 +5,11 @@ import java.util.*;
  * Data will contain elevator direction and floor number
  *
  * @author Nazifa Tanzim, 101074707
- * @author Chris D'Silva
+ * @author Chris D'Silva  101067295
  *
  */
 public class ElevatorSubsystem implements Runnable{
    
-	//
 	private String location;
 
 	//Denotes the states of the elevator 
