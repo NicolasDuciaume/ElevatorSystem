@@ -4,7 +4,7 @@ import java.util.*;
  * Send and receives button presses, lamps and sensors information form floors and elevators. 
  * Schedules the route of the elevator
  * 
- * @author Tooba Sheikh.
+ * @author Tooba Sheikh 101028915
  * 
  */
 public class Schedular {
