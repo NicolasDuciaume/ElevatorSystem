@@ -21,6 +21,19 @@ GENERAL USAGE NOTES
   FloorSubsystem thread to the ElevatorSubsystem thread and vice versa
 ----------------------------------------------------------------------------------------
 
+Files
+===================
+FloorSubsystem.java     - Floor Class
+ElevatorSubsystem.java  - Elevator Class
+Main.java               - Main class
+Sheduler.java           - Scheduler
+SchedulerTest.java      - Test suite
+UML Class Diagram.png   - UML Diagram
+Sequence Diagram.png    - Sequence diagram
+Test.txt                - File to be read by FloorSubsystem.java
+
+
+
 Running application
 ====================
 Java application can be run in any java compiler from the Main.java class.
