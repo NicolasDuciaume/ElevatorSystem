@@ -9,7 +9,7 @@ import elevator.*;
  * @author Nazifa Tanzim, 101074707
  *
  */
-public class SchedularTest extends TestCase {
+public class SchedulerTest extends TestCase {
 	private Scheduler scheduler;
 	private String data;
 
