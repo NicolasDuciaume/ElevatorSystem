@@ -10,12 +10,12 @@ import elevator.*;
  *
  */
 public class SchedularTest extends TestCase {
-	private Schedular scheduler;
+	private Scheduler scheduler;
 	private String data;
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		scheduler = new Schedular();
+		scheduler = new Scheduler();
 		data = "Hello";
 	}
 
@@ -25,7 +25,7 @@ public class SchedularTest extends TestCase {
 	 * 	emptyFloor = false
 	 */
 	public void testRecieveFromFloor() {
-		scheduler.recieveFromFloor(data);
+		scheduler.receiveFromFloor(data);
 		assertEquals(data, scheduler.getDataFloor());
 		assertEquals(false, scheduler.isEmptyFloor());
 	}
@@ -36,7 +36,7 @@ public class SchedularTest extends TestCase {
 	 * 	emptyElevator = false
 	 */
 	public void testRecieveFromElevator() {
-		scheduler.recieveFromElevator(data);
+		scheduler.receiveFromElevator(data);
 		assertEquals(data, scheduler.getDataElevator());
 		assertEquals(false, scheduler.isEmptyElevator());
 	}
@@ -47,7 +47,7 @@ public class SchedularTest extends TestCase {
 	 * 	emptyFloor = true
 	 */
 	public void testSendToFloor() {
-		scheduler.recieveFromElevator(data);
+		scheduler.receiveFromElevator(data);
 		String dataForFloor = scheduler.sendToFloor();
 		
 		assertEquals(data, dataForFloor);
@@ -61,7 +61,7 @@ public class SchedularTest extends TestCase {
 	 * 	emptyFloor = true
 	 */
 	public void testSendToElevator() {
-		scheduler.recieveFromFloor(data);
+		scheduler.receiveFromFloor(data);
 		String dataForElevator = scheduler.sendToElevator();
 		
 		assertEquals(data, dataForElevator);

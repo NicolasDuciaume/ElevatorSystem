@@ -8,7 +8,7 @@ import java.util.*;
  * @author Tooba Sheikh 101028915
  * 
  */
-public class Schedular {
+public class Scheduler {
 	
 	//store the floors below and above current floor
 	private Queue<Object> upQueue;
@@ -22,7 +22,7 @@ public class Schedular {
 	private boolean emptyFloor = true;
 	private boolean emptyElevator = true;
 	
-	public Schedular(){
+	public Scheduler(){
 		upQueue = new PriorityQueue<>();
 		downQueue = new PriorityQueue<>();
 	}
@@ -32,7 +32,7 @@ public class Schedular {
 	 * 
 	 * @param data info receive from the floor
 	 */
-	public synchronized void recieveFromFloor(String data) {
+	public synchronized void receiveFromFloor(String data) {
 		while (!dataFloor.equals("")) {
 			try {
 				wait();
@@ -52,7 +52,7 @@ public class Schedular {
 	 * 
 	 * @param data info receive from the elevator
 	 */
-	public synchronized void recieveFromElevator(String data) {
+	public synchronized void receiveFromElevator(String data) {
 		while (!dataElevator.equals("")) {
 			try {
 				wait();

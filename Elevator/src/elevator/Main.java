@@ -6,10 +6,10 @@ public class Main {
     public static void main(String[] args){
         
     	Thread Floor, Elevator; // Declaring two threads 
-        Schedular schedular;
+        Scheduler schedular;
 
         //Initializing
-        schedular = new Schedular();
+        schedular = new Scheduler();
         Floor = new Thread(new FloorSubsystem("File.txt",schedular), "Floor");
         Elevator = new Thread(new ElevatorSubsystem(schedular), "Elevator");
 

@@ -25,12 +25,12 @@ public class ElevatorSubsystem implements Runnable{
     private boolean arrivalLamp; //true if lap should be lit up
 
     private String data; // info received from the Scheduler
-    private Schedular scheduler; //Scheduler object used to receive and pass data
+    private Scheduler scheduler; //Scheduler object used to receive and pass data
 
     /**
      * Instantiates the variables  
      */
-    public ElevatorSubsystem(Schedular scheduler) {
+    public ElevatorSubsystem(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
@@ -54,7 +54,7 @@ public class ElevatorSubsystem implements Runnable{
         while(true){
             data = scheduler.sendToElevator(); // Receive data from Scheduler
             System.out.println("Elevator Received: " + data);
-            scheduler.recieveFromElevator(data); // Send data from elevator to Scheduler
+            scheduler.receiveFromElevator(data); // Send data from elevator to Scheduler
             System.out.println("Elevator Sent: " + data);
             data = "";
             try {

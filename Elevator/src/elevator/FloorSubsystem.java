@@ -13,8 +13,8 @@ import java.util.Scanner; //Import this class to accept input
  */
 public class FloorSubsystem implements Runnable{
 
-    private String Data; //holds the information from the input file 
-    private Schedular scheduler; //Scheduler object used to receive and pass data
+    private String data; //holds the information from the input file 
+    private Scheduler scheduler; //Scheduler object used to receive and pass data
 
     /**
      * Instantiates all the variables and tries to find and read the input file
@@ -22,7 +22,7 @@ public class FloorSubsystem implements Runnable{
      * @param FileLocation String that indicates the name and path of the input file
      * @param scheduler Object that shares data between threads
      */
-    public FloorSubsystem(String FileLocation, Schedular scheduler){
+    public FloorSubsystem(String FileLocation, Scheduler scheduler){
         this.scheduler = scheduler;
         try {
             File myObj = new File(FileLocation); //Gets file from file location  
@@ -30,7 +30,7 @@ public class FloorSubsystem implements Runnable{
   
             //if file has multiple lines of input, appends it all to one variable
             while (myReader.hasNextLine()) {
-                Data = "" + myReader.nextLine(); 
+                data = "" + myReader.nextLine(); 
             }
             myReader.close();
         } catch (FileNotFoundException e) { //throws exception if file not found
@@ -45,11 +45,11 @@ public class FloorSubsystem implements Runnable{
     @Override
     public void run() {
         while(true){
-            scheduler.recieveFromFloor(Data);  //Send data to the Scheduler
-            System.out.println("Floor Sent: " + Data);
-            Data = ""; // once data is sent, clear data
-            Data = scheduler.sendToFloor(); //Receive data from the floor
-            System.out.println("Floor Received: " + Data);
+            scheduler.receiveFromFloor(data);  //Send data to the Scheduler
+            System.out.println("Floor Sent: " + data);
+            data = ""; // once data is sent, clear data
+            data = scheduler.sendToFloor(); //Receive data from the floor
+            System.out.println("Floor Received: " + data);
             try {
                 Thread.sleep(1500); // change to 100 to see difference
             } catch (InterruptedException e) {}
