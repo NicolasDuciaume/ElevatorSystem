@@ -30,7 +30,7 @@ Sheduler.java           - Scheduler
 SchedulerTest.java      - Test suite
 UML Class Diagram.png   - UML Diagram
 Sequence Diagram.png    - Sequence diagram
-Test.txt                - File to be read by FloorSubsystem.java
+File.txt                - File to be read by FloorSubsystem.java
 
 
 
@@ -42,3 +42,11 @@ to send the string to the ElevatorSystem. The ElevatorSubsystem will also use
 the Scheduler to send the string back to the FloorSubsystem. The console will
 display messages indicating the FloorSubsystem and ElevatorSubsystem have 
 received/sent strings. One must terminate the program manually when finished.
+
+BreakDown
+====================
+Nicolas Duciaume: Creating the threads functionality and classes
+Jameel Alidina: Managing meetings, creating README, and FloorSubsystem
+Tooba Sheikh: Creating Scheduler, Refactoring, Comments
+Chris D'Silva: Creating UML and Sequence Diagrams, Creating ElevatorSubsystem
+Nazifa Tanzim: Creating ElevatorSubsystem, Creating Tests
