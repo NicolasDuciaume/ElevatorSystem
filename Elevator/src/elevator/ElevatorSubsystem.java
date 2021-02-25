@@ -14,6 +14,7 @@ public class ElevatorSubsystem implements Runnable{
 	//
 	private String location;
 
+	public int testBool = 1;
 	//Denotes the states of the elevator 
     private enum motor{
         UP, DOWN, STOPPED;
@@ -32,19 +33,21 @@ public class ElevatorSubsystem implements Runnable{
      */
     public ElevatorSubsystem(Scheduler scheduler) {
         this.scheduler = scheduler;
+        location = "1";
     }
 
     private void setArrivalLamp() {
 
     }
 
-    private void setLocation() {
-
+    private void setLocation(String x) {
+        location = x;
     }
 
     private void setMotor() {
 
     }
+
 
     /**
      * Sends and receives data from the scheduler 
@@ -54,9 +57,17 @@ public class ElevatorSubsystem implements Runnable{
         while(true){
             data = scheduler.sendToElevator(); // Receive data from Scheduler
             System.out.println("Elevator Received: " + data);
+            //goes to location
+            if(testBool==1){
+                scheduler.receiveFromElevator("3");
+                testBool++;
+            }
+            if(data != "waiting"){
+                setLocation(data);
+                data = "arrived " + data;
+            }
             scheduler.receiveFromElevator(data); // Send data from elevator to Scheduler
             System.out.println("Elevator Sent: " + data);
-            data = "";
             try {
                 Thread.sleep(1500); // change to 100 to see difference
             } catch (InterruptedException e) {}

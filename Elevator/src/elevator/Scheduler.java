@@ -11,8 +11,12 @@ import java.util.*;
 public class Scheduler {
 	
 	//store the floors below and above current floor
-	private Queue<Object> upQueue;
-	private Queue<Object> downQueue;
+	private ArrayList<Integer> upQueue;
+	private ArrayList<Integer> downQueue;
+	private int current = 1;
+	public String direction = "Up";
+
+	private String[] processed;
 	
 	//To differentiate between data received from floor vs elevator
 	private String dataFloor = "";
@@ -23,8 +27,8 @@ public class Scheduler {
 	private boolean emptyElevator = true;
 	
 	public Scheduler(){
-		upQueue = new PriorityQueue<>();
-		downQueue = new PriorityQueue<>();
+		upQueue = new ArrayList<>();
+		downQueue = new ArrayList<>();
 	}
 	
 	/**
@@ -42,10 +46,20 @@ public class Scheduler {
 		}
 		
 		//Changes the state of the floor and reset the data value
-		this.dataFloor = data;
+		String[] cutData = data.split(" ");
+		if(cutData.length == 4){
+			checkPriority(cutData[1]);
+			checkPriority(cutData[3]);
+			this.dataFloor = checkSend();
+		}
+		else{
+			this.dataFloor = checkSend();
+		}
 		emptyFloor = false;
 		notifyAll();
 	}
+
+
 	
 	/**
 	 * Receives data from the Elevator
@@ -60,11 +74,21 @@ public class Scheduler {
 				return;
 			}
 		}
-		
+		String[] temp = data.split(" ");
 		//Changes the state of the elevator and reset the data value
-		this.dataElevator = data;
-		emptyElevator = false;
-		notifyAll();
+		if(!(temp[0].equals("arrived") || data.equals("waiting"))){
+			checkPriority(data);
+			this.dataFloor = checkSend();
+			notifyAll();
+		}
+		else{
+			if(temp[0].equals("arrived")){
+				current = Integer.parseInt(temp[1]);
+			}
+			this.dataElevator = data;
+			emptyElevator = false;
+			notifyAll();
+		}
 	}
 	
 	/**
@@ -115,8 +139,42 @@ public class Scheduler {
 	/**
 	 * Checks priority of each floor requested, which to go to first
 	 */
-	public synchronized void checkPriority() {
-		
+	public synchronized void checkPriority(String x) {
+		int temp = Integer.parseInt(x);
+		if(current < temp){
+			upQueue.add(temp);
+			Collections.sort(upQueue);
+		}
+		else if(current > temp){
+			downQueue.add(temp);
+			Collections.sort(downQueue);
+			Collections.reverse(downQueue);
+		}
+
+
+	}
+
+	public synchronized String checkSend(){
+		String temp = "";
+		if(upQueue.isEmpty() && !downQueue.isEmpty()){
+			direction = "Down";
+		}
+		else if(!upQueue.isEmpty() && downQueue.isEmpty()){
+			direction = "Up";
+		}
+
+		if(upQueue.isEmpty() && downQueue.isEmpty()){
+			temp = "waiting";
+		}
+		else if(direction == "Up"){
+			temp = upQueue.get(0).toString();
+			upQueue.remove(0);
+		}
+		else if(direction.equals("Down")){
+			temp = downQueue.get(0).toString();
+			downQueue.remove(0);
+		}
+		return temp;
 	}
 	
 	/**

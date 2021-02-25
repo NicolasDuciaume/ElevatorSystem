@@ -38,7 +38,10 @@ public class FloorSubsystem implements Runnable{
             e.printStackTrace();
         }
     }
-    
+
+    public void doStuff(String floor){
+
+    }
     /**
      * Send and receives data from the scheduler
      */
@@ -50,6 +53,12 @@ public class FloorSubsystem implements Runnable{
             data = ""; // once data is sent, clear data
             data = scheduler.sendToFloor(); //Receive data from the floor
             System.out.println("Floor Received: " + data);
+            String[] temp = data.split(" ");
+            if(temp[0].equals("arrived")){
+                //open and close door an lamps
+                doStuff(temp[1]);
+                data = "go";
+            }
             try {
                 Thread.sleep(1500); // change to 100 to see difference
             } catch (InterruptedException e) {}
