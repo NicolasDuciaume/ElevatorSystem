@@ -127,11 +127,11 @@ public class Scheduler {
 			}
 		}
 
-		String temp = this.dataFromElevator;
+		String dataFromElevator = this.dataFromElevator;
 		this.dataFromElevator = "";
 		this.emptyFloor = true;
 		this.notifyAll();
-		return temp;
+		return dataFromElevator;
 	}
 
 	public synchronized FloorRequest sendToElevator() {
@@ -149,12 +149,12 @@ public class Scheduler {
 		return new FloorRequest(new Timestamp(System.currentTimeMillis()), -1L, -1L, this.currentFloor, this.floorToVisit, this.direction);
 	}
 
-	public synchronized void checkPriority(int temp) {
-		if (this.currentFloor < temp) {
-			this.upQueue.add(temp);
+	public synchronized void checkPriority(int floor) {
+		if (this.currentFloor < floor) {
+			this.upQueue.add(floor);
 			Collections.sort(this.upQueue);
-		} else if (this.currentFloor > temp) {
-			this.downQueue.add(temp);
+		} else if (this.currentFloor > floor) {
+			this.downQueue.add(floor);
 			Collections.sort(this.downQueue);
 			Collections.reverse(this.downQueue);
 		}
