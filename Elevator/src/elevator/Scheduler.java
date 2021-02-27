@@ -5,16 +5,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Scheduler {
-	private ArrayList<Integer> upQueue = new ArrayList<Integer>();
-	private ArrayList<Integer> downQueue = new ArrayList<Integer>();
-	private int currentFloor = 1;
+	
+	private ArrayList<Integer> upQueue;
+	private ArrayList<Integer> downQueue;
+	private int currentFloor;
 	public Direction direction;
 	private String[] processed;
-	private String isDataFromFloor = "";
-	private String dataFromElevator = "";
-	private int floorToVisit = -1;
-	private boolean emptyFloor = true;
-	private boolean emptyElevator = true;
+	private String isDataFromFloor;
+	private String dataFromElevator;
+	private int floorToVisit;
+	private boolean emptyFloor;
+	private boolean emptyElevator;
 	
 	private SchedulerStates currentState, currentState2;
 	
@@ -23,45 +24,55 @@ public class Scheduler {
 	}
 
 	public Scheduler() {
+		upQueue = new ArrayList<Integer>();
+		downQueue = new ArrayList<Integer>();
+		currentFloor = 1;
+		isDataFromFloor = "";
+		dataFromElevator = "";
+		floorToVisit = -1;
+		emptyFloor = true;
+		emptyElevator = true;
+		
 		currentState = SchedulerStates.STATE_1;
 		currentState2 = SchedulerStates.STATE_2;
+		
+		
 	}
 
-	public Object stateMachine(String floorOrElevator,FloorRequest r,String floorElevatorData) {
-		Object temp = null;
+	public Object sendStateMachine() {
+		Object objectReturned = null;
 		switch(currentState) {
 		case STATE_1:
-			temp = sendToElevator();
+			objectReturned = sendToElevator();
 			currentState = SchedulerStates.STATE_2;
 			break;
 		case STATE_2:
-			temp = sendToFloor();
+			objectReturned = sendToFloor();
 			currentState = SchedulerStates.STATE_1;
 			break;
 		}
-		return temp;
+		return objectReturned;
 	}
 
-	public Object stateMachine2(String floorOrElevator,FloorRequest r,String floorElevatorData) {
+	public void receiveStateMachine(FloorRequest floorRequest,String floorElevatorData) {
 		switch(currentState2) {
 			case STATE_1:
 				receiveFromElevator(floorElevatorData);
 				currentState2 = SchedulerStates.STATE_2;
 				break;
 			case STATE_2:
-				receiveFromFloor(floorElevatorData,r);
+				receiveFromFloor(floorElevatorData,floorRequest);
 				currentState2 = SchedulerStates.STATE_1;
 				break;
 		}
-		return null;
 	}
 	
 	public synchronized void receiveFromFloor(String data, FloorRequest floor) {
 		while(!this.isDataFromFloor.equals("")) {
 			try {
 				this.wait();
-			} catch (InterruptedException var4) {
-				var4.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 				return;
 			}
 		}
@@ -84,19 +95,20 @@ public class Scheduler {
 		while(!this.dataFromElevator.equals("")) {
 			try {
 				this.wait();
-			} catch (InterruptedException var3) {
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 				return;
 			}
 		}
 
-		String[] temp = data.split(" ");
-		if (!temp[0].equals("arrived") && !data.equals("waiting")) {
+		String[] splitElevatorMsg = data.split(" ");
+		if (!splitElevatorMsg[0].equals("arrived") && !data.equals("waiting")) {
 			this.checkPriority(Integer.parseInt(data));
 			this.floorToVisit = this.checkSend();
 			this.notifyAll();
 		} else {
-			if (temp[0].equals("arrived")) {
-				this.currentFloor = Integer.parseInt(temp[1]);
+			if (splitElevatorMsg[0].equals("arrived")) {
+				this.currentFloor = Integer.parseInt(splitElevatorMsg[1]);
 			}
 
 			this.dataFromElevator = data;
@@ -110,8 +122,8 @@ public class Scheduler {
 		while(this.dataFromElevator.equals("")) {
 			try {
 				this.wait();
-			} catch (InterruptedException var2) {
-				return null;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -126,7 +138,8 @@ public class Scheduler {
 		while(this.isDataFromFloor.equals("")) {
 			try {
 				this.wait();
-			} catch (InterruptedException var2) {
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 				return new FloorRequest();
 			}
 		}

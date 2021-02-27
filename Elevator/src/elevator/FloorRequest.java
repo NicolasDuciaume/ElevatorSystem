@@ -3,6 +3,7 @@ package elevator;
 import java.sql.Timestamp;
 
 public class FloorRequest {
+	
     private Timestamp requestTime;
     private long travelTime;
     private long doorTime;
