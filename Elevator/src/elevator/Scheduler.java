@@ -1,200 +1,150 @@
 package elevator;
-import java.util.*;
 
-/**
- * Send and receives button presses, lamps and sensors information form floors and elevators. 
- * Schedules the route of the elevator
- * 
- * @author Tooba Sheikh 101028915
- * 
- */
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
+
 public class Scheduler {
-	
-	//store the floors below and above current floor
-	private ArrayList<Integer> upQueue;
-	private ArrayList<Integer> downQueue;
-	private int current = 1;
-	public String direction = "Up";
-
+	private ArrayList<Integer> upQueue = new ArrayList();
+	private ArrayList<Integer> downQueue = new ArrayList();
+	private int currentFloor = 1;
+	public Direction direction;
 	private String[] processed;
-	
-	//To differentiate between data received from floor vs elevator
-	private String dataFloor = "";
-	private String dataElevator = "";
-	
-	//boolean states for the floor and elevator
+	private String isDataFromFloor = "";
+	private String dataFromElevator = "";
+	private int floorToVisit = -1;
 	private boolean emptyFloor = true;
 	private boolean emptyElevator = true;
-	
-	public Scheduler(){
-		upQueue = new ArrayList<>();
-		downQueue = new ArrayList<>();
+
+	public Scheduler() {
 	}
-	
-	/**
-	 * Receives data from the floor
-	 * 
-	 * @param data info receive from the floor
-	 */
-	public synchronized void receiveFromFloor(String data) {
-		while (!dataFloor.equals("")) {
+
+	public synchronized void receiveFromFloor(String data, FloorRequest floor) {
+		while(!this.isDataFromFloor.equals("")) {
 			try {
-				wait();
-			} catch (InterruptedException e) {
+				this.wait();
+			} catch (InterruptedException var4) {
+				var4.printStackTrace();
 				return;
 			}
 		}
-		
-		//Changes the state of the floor and reset the data value
-		String[] cutData = data.split(" ");
-		if(cutData.length == 4){
-			checkPriority(cutData[1]);
-			checkPriority(cutData[3]);
-			this.dataFloor = checkSend();
+
+		if (floor != null) {
+			this.checkPriority(floor.getFloorRequestOrigin());
+			this.checkPriority(floor.getFloorDestination());
+			this.floorToVisit = this.checkSend();
+			this.isDataFromFloor = "ok";
+		} else {
+			this.floorToVisit = this.checkSend();
+			this.isDataFromFloor = "ok";
 		}
-		else{
-			this.dataFloor = checkSend();
-		}
-		emptyFloor = false;
-		notifyAll();
+
+		this.emptyFloor = false;
+		this.notifyAll();
 	}
 
-
-	
-	/**
-	 * Receives data from the Elevator
-	 * 
-	 * @param data info receive from the elevator
-	 */
 	public synchronized void receiveFromElevator(String data) {
-		while (!dataElevator.equals("")) {
+		while(!this.dataFromElevator.equals("")) {
 			try {
-				wait();
-			} catch (InterruptedException e) {
+				this.wait();
+			} catch (InterruptedException var3) {
 				return;
 			}
 		}
+
 		String[] temp = data.split(" ");
-		//Changes the state of the elevator and reset the data value
-		if(!(temp[0].equals("arrived") || data.equals("waiting"))){
-			checkPriority(data);
-			this.dataFloor = checkSend();
-			notifyAll();
-		}
-		else{
-			if(temp[0].equals("arrived")){
-				current = Integer.parseInt(temp[1]);
+		if (!temp[0].equals("arrived") && !data.equals("waiting")) {
+			this.checkPriority(Integer.parseInt(data));
+			this.floorToVisit = this.checkSend();
+			this.notifyAll();
+		} else {
+			if (temp[0].equals("arrived")) {
+				this.currentFloor = Integer.parseInt(temp[1]);
 			}
-			this.dataElevator = data;
-			emptyElevator = false;
-			notifyAll();
+
+			this.dataFromElevator = data;
+			this.emptyElevator = false;
+			this.notifyAll();
 		}
+
 	}
-	
-	/**
-	 * Sends data to the floor
-	 * 
-	 * @return info to be sent to the floor
-	 */
+
 	public synchronized String sendToFloor() {
-		while (dataElevator.equals("")) {
+		while(this.dataFromElevator.equals("")) {
 			try {
-				wait();
-			} catch (InterruptedException e) {
+				this.wait();
+			} catch (InterruptedException var2) {
 				return null;
 			}
 		}
-		
-		//Changes the state of the floor and reset the data value
-		String temp = dataElevator;
-		dataElevator = "";
-		emptyFloor = true;
-		notifyAll();
-		
+
+		String temp = this.dataFromElevator;
+		this.dataFromElevator = "";
+		this.emptyFloor = true;
+		this.notifyAll();
 		return temp;
 	}
-	
-	/**
-	 * Sends data to the Elevator
-	 * 
-	 * @return info to be sent to the elevator
-	 */
-	public synchronized String sendToElevator() {
-		while (dataFloor.equals("")) {
+
+	public synchronized FloorRequest sendToElevator() {
+		while(this.isDataFromFloor.equals("")) {
 			try {
-				wait();
-			} catch (InterruptedException e) {
-				return null;
+				this.wait();
+			} catch (InterruptedException var2) {
+				return new FloorRequest();
 			}
 		}
-		
-		//Changes the state of the elevator and reset the data value
-		String temp = dataFloor;
-		dataFloor = "";
+		this.isDataFromFloor = "";
 		emptyElevator = true;
 		notifyAll();
-		return temp;
+		return new FloorRequest(new Timestamp(System.currentTimeMillis()), -1L, -1L, this.currentFloor, this.floorToVisit, this.direction);
 	}
-	
-	/**
-	 * Checks priority of each floor requested, which to go to first
-	 */
-	public synchronized void checkPriority(String x) {
-		int temp = Integer.parseInt(x);
-		if(current < temp){
-			upQueue.add(temp);
-			Collections.sort(upQueue);
-		}
-		else if(current > temp){
-			downQueue.add(temp);
-			Collections.sort(downQueue);
-			Collections.reverse(downQueue);
-		}
 
+	public synchronized void checkPriority(int temp) {
+		if (this.currentFloor < temp) {
+			this.upQueue.add(temp);
+			Collections.sort(this.upQueue);
+		} else if (this.currentFloor > temp) {
+			this.downQueue.add(temp);
+			Collections.sort(this.downQueue);
+			Collections.reverse(this.downQueue);
+		}
 
 	}
 
-	public synchronized String checkSend(){
-		String temp = "";
-		if(upQueue.isEmpty() && !downQueue.isEmpty()){
-			direction = "Down";
-		}
-		else if(!upQueue.isEmpty() && downQueue.isEmpty()){
-			direction = "Up";
+	private synchronized int checkSend() {
+		int toVisit = -1;
+		if (this.upQueue.isEmpty() && !this.downQueue.isEmpty()) {
+			this.direction = Direction.DOWN;
+		} else if (!this.upQueue.isEmpty() && this.downQueue.isEmpty()) {
+			this.direction = Direction.UP;
 		}
 
-		if(upQueue.isEmpty() && downQueue.isEmpty()){
-			temp = "waiting";
+		if (!this.upQueue.isEmpty() || !this.downQueue.isEmpty()) {
+			if (this.direction == Direction.UP) {
+				toVisit = (Integer)this.upQueue.get(0);
+				this.upQueue.remove(0);
+			} else if (this.direction == Direction.DOWN) {
+				toVisit = (Integer)this.downQueue.get(0);
+				this.downQueue.remove(0);
+			}
 		}
-		else if(direction == "Up"){
-			temp = upQueue.get(0).toString();
-			upQueue.remove(0);
-		}
-		else if(direction.equals("Down")){
-			temp = downQueue.get(0).toString();
-			downQueue.remove(0);
-		}
-		return temp;
+
+		return toVisit;
 	}
-	
-	/**
-	 * Getters for JUnit testing
-	 */
 
 	public String getDataFloor() {
-		return this.dataFloor;
+		return this.isDataFromFloor;
 	}
-	
+
 	public String getDataElevator() {
-		return this.dataElevator;
+		return this.dataFromElevator;
 	}
-	
+
 	public boolean isEmptyFloor() {
 		return this.emptyFloor;
 	}
-	
+
 	public boolean isEmptyElevator() {
 		return this.emptyElevator;
 	}
-	
 }
