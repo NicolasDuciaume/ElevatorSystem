@@ -1,58 +1,91 @@
 package elevator;
 
-import java.io.File;  // Import the File class
-import java.io.FileNotFoundException;  // Import this class to handle errors
-import java.util.Scanner; //Import this class to accept input
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Scanner;
 
-/**
- * Class that accepts the user input (currently in the form of a text file) 
- * And sends/receives data to the Scheduler to inform the elevator 
- * 
- * @author Nicolas Duciaume
- * @author Jameel Alidina
- */
-public class FloorSubsystem implements Runnable{
+public class FloorSubsystem implements Runnable {
+    private String data;
+    private Scheduler scheduler;
+    private ArrayList<FloorRequest> listofRequests;
+    public int test = 0;
 
-    private String data; //holds the information from the input file 
-    private Scheduler scheduler; //Scheduler object used to receive and pass data
-
-    /**
-     * Instantiates all the variables and tries to find and read the input file
-     * 
-     * @param FileLocation String that indicates the name and path of the input file
-     * @param scheduler Object that shares data between threads
-     */
-    public FloorSubsystem(String FileLocation, Scheduler scheduler){
+    public FloorSubsystem(String FileLocation, Scheduler scheduler) {
         this.scheduler = scheduler;
+        this.listofRequests = new ArrayList();
+        this.addFloorRequest(FileLocation);
+    }
+
+    public void addFloorRequest(String FileLocation) {
+        Timestamp requestTime = new Timestamp(System.currentTimeMillis());
+        long travelTime = 1L;
+        long doorTime = 1L;
+
         try {
-            File myObj = new File(FileLocation); //Gets file from file location  
+            File myObj = new File(FileLocation);
             Scanner myReader = new Scanner(myObj);
-  
-            //if file has multiple lines of input, appends it all to one variable
-            while (myReader.hasNextLine()) {
-                data = "" + myReader.nextLine(); 
+
+            while(myReader.hasNextLine()) {
+                this.data = myReader.nextLine();
+                String[] requestArray = this.data.split(" ");
+                String direction = requestArray[2];
+                Direction requestDirection;
+                if (direction.equals("Up")) {
+                    requestDirection = Direction.UP;
+                } else if (direction.equals("Down")) {
+                    requestDirection = Direction.DOWN;
+                } else {
+                    requestDirection = Direction.STOPPED;
+                }
+
+                FloorRequest request = new FloorRequest(requestTime, travelTime, doorTime, Integer.parseInt(requestArray[1]), Integer.parseInt(requestArray[3]), requestDirection);
+                this.listofRequests.add(request);
             }
+
             myReader.close();
-        } catch (FileNotFoundException e) { //throws exception if file not found
+        } catch (FileNotFoundException var13) {
             System.out.println("File not found.");
-            e.printStackTrace();
+            var13.printStackTrace();
         }
+
     }
     
-    /**
-     * Send and receives data from the scheduler
-     */
-    @Override
+    //TODO: Turn Lamps, buttons etc on
+    public void setLampsSensors(String floor) {
+    }
+
     public void run() {
-        while(true){
-            scheduler.receiveFromFloor(data);  //Send data to the Scheduler
-            System.out.println("Floor Sent: " + data);
-            data = ""; // once data is sent, clear data
-            data = scheduler.sendToFloor(); //Receive data from the floor
-            System.out.println("Floor Received: " + data);
+        while(true) {
+        	//TODO: Change if statement to a loop so we can process more than 1 request
+            if(test == 0){
+                FloorRequest r = listofRequests.get(0);
+                scheduler.stateMachine("floor",r,"");
+                this.listofRequests.remove(r);
+                test++;
+            }
+            else{
+            	scheduler.stateMachine("floor", null,data);
+                this.scheduler.receiveFromFloor(data, null);
+            }
+
+            System.out.println("Floor Sent: " + this.data);
+            this.data = "";
+            this.data = (String) scheduler.stateMachine("floor",null,data);
+//            this.data = this.scheduler.sendToFloor();
+            System.out.println("Floor Received: " + this.data);
+            String[] splitElevatorResponse = this.data.split(" ");
+            if (splitElevatorResponse[0].equals("arrived")) {
+                this.setLampsSensors(splitElevatorResponse[1]);
+                this.data = "go";
+            }
+
             try {
-                Thread.sleep(1500); // change to 100 to see difference
-            } catch (InterruptedException e) {}
+                Thread.sleep(1500L);
+            } catch (InterruptedException var3) {
+            }
         }
     }
 }
