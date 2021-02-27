@@ -62,13 +62,12 @@ public class FloorSubsystem implements Runnable {
         	//TODO: Change if statement to a loop so we can process more than 1 request
             if(test == 0){
                 FloorRequest r = listofRequests.get(0);
-                scheduler.stateMachine("floor",r,"");
+                scheduler.stateMachine2("floor",r,"");
                 this.listofRequests.remove(r);
                 test++;
             }
             else{
-            	scheduler.stateMachine("floor", null,data);
-                this.scheduler.receiveFromFloor(data, null);
+            	scheduler.stateMachine2("floor", null,data);
             }
 
             System.out.println("Floor Sent: " + this.data);
@@ -77,6 +76,9 @@ public class FloorSubsystem implements Runnable {
 //            this.data = this.scheduler.sendToFloor();
             System.out.println("Floor Received: " + this.data);
             String[] splitElevatorResponse = this.data.split(" ");
+            if(splitElevatorResponse[1].equals("-1")){
+                System.exit(0);
+            }
             if (splitElevatorResponse[0].equals("arrived")) {
                 this.setLampsSensors(splitElevatorResponse[1]);
                 this.data = "go";

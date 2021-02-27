@@ -16,34 +16,42 @@ public class Scheduler {
 	private boolean emptyFloor = true;
 	private boolean emptyElevator = true;
 	
-	private SchedulerStates currentState;
+	private SchedulerStates currentState, currentState2;
 	
 	private enum SchedulerStates {
 		INITIAL_STATE, STATE_1, STATE_2;
 	}
 
 	public Scheduler() {
+		currentState = SchedulerStates.STATE_1;
+		currentState2 = SchedulerStates.STATE_2;
 	}
 
 	public Object stateMachine(String floorOrElevator,FloorRequest r,String floorElevatorData) {
+		Object temp = null;
 		switch(currentState) {
-		case INITIAL_STATE:
-			receiveFromFloor(floorElevatorData,r);
-			currentState = SchedulerStates.STATE_1;
 		case STATE_1:
-			if(floorOrElevator.equals("floor")) {
-				sendToFloor();
-			}else {
-				sendToElevator();
-			}
+			temp = sendToElevator();
 			currentState = SchedulerStates.STATE_2;
+			break;
 		case STATE_2:
-			if(floorOrElevator.equals("floor")) {
-				receiveFromFloor(floorElevatorData,r);
-			}else {
-				receiveFromElevator(floorElevatorData);
-			}
+			temp = sendToFloor();
 			currentState = SchedulerStates.STATE_1;
+			break;
+		}
+		return temp;
+	}
+
+	public Object stateMachine2(String floorOrElevator,FloorRequest r,String floorElevatorData) {
+		switch(currentState2) {
+			case STATE_1:
+				receiveFromElevator(floorElevatorData);
+				currentState2 = SchedulerStates.STATE_2;
+				break;
+			case STATE_2:
+				receiveFromFloor(floorElevatorData,r);
+				currentState2 = SchedulerStates.STATE_1;
+				break;
 		}
 		return null;
 	}

@@ -58,7 +58,12 @@ public class ElevatorSubsystem implements Runnable {
             	data = (FloorRequest) scheduler.stateMachine("elevator",null ,""); //Receive data from Scheduler
 //                data = scheduler.sendToElevator(); //Receive data from Scheduler
                 System.out.println("Elevator Received: "+ data);
-                currentState = ElevatorStates.STATE_1;
+                if(data == null){
+                    currentState = ElevatorStates.INITIAL_STATE;
+                }
+                else{
+                    currentState = ElevatorStates.STATE_1;
+                }
                 break;
             case STATE_1:
                 //TODO: Timer Event needed for future Iterations. Door open time,
@@ -81,7 +86,7 @@ public class ElevatorSubsystem implements Runnable {
                 motorState = Direction.STOPPED;
                 directionLamp = motorState;
                 String msg = "arrived " + data.getFloorDestination();
-                scheduler.stateMachine("elevator", null, msg); // Send data from elevator to Scheduler
+                scheduler.stateMachine2("elevator", null, msg); // Send data from elevator to Scheduler
 //                scheduler.receiveFromElevator(msg); // Send data from elevator to Scheduler
                 System.out.println("Elevator Sent: " + msg);
                 currentState = ElevatorStates.INITIAL_STATE;
