@@ -71,7 +71,7 @@ public class Scheduler {
 	 * 
 	 * @param data info receive from the elevator
 	 */
-	public synchronized void receiveFromElevator(FloorRequest request) {
+	public synchronized void receiveFromElevator(String elevatorState, int buttonPress,int currentElevatorFloor) {
 		while (!dataFromElevator.equals("")) {
 			try {
 				wait();
@@ -80,16 +80,16 @@ public class Scheduler {
 			}
 		}
 		//Changes the state of the elevator and reset the data value
-		if(!(temp[0].equals("arrived") || this.direction == Direction.STOPPED)){
-			checkPriority(Integer.parseInt(data));
+		if(!(elevatorState.equals("arrived") || this.direction == Direction.STOPPED)){
+			checkPriority(buttonPress);
 			this.floorToVisit = checkSend();
 			notifyAll();
 		}
 		else{
-			if(temp[0].equals("arrived")){
-				currentFloor = Integer.parseInt(temp[1]);
+			if(elevatorState.equals("arrived")){
+				currentFloor = currentElevatorFloor;
 			}
-			this.dataFromElevator = data;
+			this.dataFromElevator = elevatorState;
 			emptyElevator = false;
 			notifyAll();
 		}

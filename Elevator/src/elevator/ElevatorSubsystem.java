@@ -21,6 +21,7 @@ public class ElevatorSubsystem implements Runnable{
 	private Direction motorState; // current direction of elevator
 	
 	private Queue<FloorRequest> floorRequests;
+	private FloorRequest currentRequest;
     
     private boolean doorOpen;
     
@@ -78,7 +79,7 @@ public class ElevatorSubsystem implements Runnable{
 	public void stateMachine() {
 		switch (currentState) {
 		case INITIAL_STATE: // getting data from scheduler in this state
-			FloorRequest currentRequest = scheduler.sendToElevator();
+			currentRequest = scheduler.sendToElevator();
 			floorRequests.add(currentRequest);
 			System.out.println("Elevator Received floor request");
 			currentState = ElevatorStates.STATE_1;
@@ -103,7 +104,7 @@ public class ElevatorSubsystem implements Runnable{
 			doorOpen = true;
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
-			scheduler.receiveFromElevator(floorRequests.remove()); // Send data from elevator to Scheduler
+			scheduler.receiveFromElevator("arrived",0,currentRequest.getFloorDestination());  // Send data from elevator to Scheduler
 	        System.out.println("Elevator Sent data");
 	        currentState = ElevatorStates.INITIAL_STATE;
 			break;
