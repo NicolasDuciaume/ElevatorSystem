@@ -1,4 +1,7 @@
 package elevator;
+
+import java.sql.Timestamp;
+
 /**
  * Main class to create and run threads  
  */
