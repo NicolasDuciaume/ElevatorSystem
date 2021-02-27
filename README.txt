@@ -28,8 +28,11 @@ ElevatorSubsystem.java  - Elevator Class
 Main.java               - Main class
 Sheduler.java           - Scheduler
 SchedulerTest.java      - Test suite
+Direction.java          - Enum for UP,DOWN and STOPPED
+FloorRequest.java       - Data Structure Class
 UML Class Diagram.png   - UML Diagram
-Sequence Diagram.png    - Sequence diagram
+Sequence Diagram.png    - Sequence Diagram
+State Diagram.png       - State Diagram
 File.txt                - File to be read by FloorSubsystem.java
 
 
@@ -37,16 +40,18 @@ File.txt                - File to be read by FloorSubsystem.java
 Running application
 ====================
 Java application can be run in any java compiler from the Main.java class.
-The FloorSubsystem will read an input string from a file and use the scheduler
-to send the string to the ElevatorSystem. The ElevatorSubsystem will also use
-the Scheduler to send the string back to the FloorSubsystem. The console will
-display messages indicating the FloorSubsystem and ElevatorSubsystem have 
-received/sent strings. One must terminate the program manually when finished.
+The floorSubsystem class is given the input file name and creates a FloorRequest with 
+the information contained within that file. The FloorSubsystem then lauches the State machine
+responsable for reading for class' while the elevatorSubsystem State machine launches the State 
+machine for reading inputs. These two state machines then switch between their two options to either 
+read from the ElevatorSubsystem/FloorSubsystem or to write to them. The State machine within
+The Elevator Subsystem Uses the inputs it receives to control the lights and doors though its own 
+State machine. The State Diagrams can be found included here.
 
 BreakDown
 ====================
-Nicolas Duciaume: Creating the threads functionality and classes
-Jameel Alidina: Managing meetings, creating README, and FloorSubsystem
-Tooba Sheikh: Creating Scheduler, Refactoring, Comments
-Chris D'Silva: Creating UML and Sequence Diagrams, Creating ElevatorSubsystem
-Nazifa Tanzim: Creating ElevatorSubsystem, Creating Tests
+Nicolas Duciaume: README, SchedulerSubsystem statemachine, Error correction
+Jameel Alidina: Direction, FloorRequest, SchedulerSubsystem statemachine
+Tooba Sheikh: SchedulerSubsystem statemachine, Error correction
+Chris D'Silva: Creating UML and Sequence Diagrams, ElevatorSubsystem statemachine
+Nazifa Tanzim: Creating ElevatorSubsystem statemachine, Creating Tests
