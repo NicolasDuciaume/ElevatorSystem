@@ -1,20 +1,21 @@
 package elevator;
+
 /**
- * Main class to create and run threads  
+ * Main class to create and run threads
  */
 public class Main {
-    public static void main(String[] args){
-        
-    	Thread Floor, Elevator; // Declaring two threads 
-        Scheduler schedular;
+	public static void main(String[] args) {
 
-        //Initializing
-        schedular = new Scheduler();
-        Floor = new Thread(new FloorSubsystem("File.txt",schedular), "Floor");
-        Elevator = new Thread(new ElevatorSubsystem(schedular), "Elevator");
+		Thread Floor, Elevator; // Declaring two threads
+		Scheduler schedular;
 
-        //Starting the threads
-        Floor.start();
-        Elevator.start();
-    }
+		// Initializing
+		schedular = new Scheduler();
+		Floor = new Thread(new FloorSubsystem("File.txt", schedular), "Floor");
+		Elevator = new Thread(new ElevatorSubsystem(schedular), "Elevator");
+
+		// Starting the threads
+		Floor.start();
+		Elevator.start();
+	}
 }

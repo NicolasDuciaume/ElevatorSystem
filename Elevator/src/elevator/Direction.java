@@ -1,10 +1,8 @@
 package elevator;
 
 public enum Direction {
-    UP,
-    DOWN,
-    STOPPED;
+	UP, DOWN, STOPPED;
 
-    private Direction() {
-    }
+	private Direction() {
+	}
 }

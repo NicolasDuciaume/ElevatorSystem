@@ -1,78 +1,126 @@
 package elevatorTests;
 
+import elevator.ElevatorSubsystem;
+import elevator.FloorRequest;
+import elevator.FloorSubsystem;
+import elevator.Scheduler;
 import junit.framework.TestCase;
 
-import elevator.*;
-
-/**
- * 
- * @author Nazifa Tanzim, 101074707
- *
- */
 public class SchedulerTest extends TestCase {
 	private Scheduler scheduler;
-	private String data;
+	private FloorSubsystem floor;
+	private FloorRequest request;
+	private int floorToVisit;
 
 	protected void setUp() throws Exception {
 		super.setUp();
+
 		scheduler = new Scheduler();
-		data = "Hello";
+		floor = new FloorSubsystem("File.txt", scheduler);
+		request = floor.getListOfRequests().remove(0);
+		floorToVisit = 2;
 	}
 
-	/*
-	 * Expected:
-	 * 	dataFloor = "test"
-	 * 	emptyFloor = false
+	/**
+	 * Test state machine that is responsible for sending data to floor and elevator
 	 */
-	public void testRecieveFromFloor() {
-		scheduler.receiveFromFloor(data);
-		assertEquals(data, scheduler.getDataFloor());
-		assertEquals(false, scheduler.isEmptyFloor());
+	public void testSendStateMachine() {
+		scheduler.receiveFromFloor("", request);
+		
+		// receive state machine should start in STATE_2 i.e. sending to elevator first
+		assertEquals(scheduler.getCurrentState1().toString(), "STATE_1");
+		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		
+		// execute STATE_2 i.e. send to elevator
+		scheduler.sendStateMachine();
+		
+		assertEquals(scheduler.getCurrentState1().toString(), "STATE_2");
+		assertEquals(scheduler.getIsDataFromFloor(), "");
 	}
 
-	/*
-	 * Expected:
-	 * 	dataElevator = "test"
-	 * 	emptyElevator = false
+	/**
+	 * Test state machine that is responsible for receiving data to floor and elevator
 	 */
-	public void testRecieveFromElevator() {
+	public void testReceiveStateMachine() {
+		// receive state machine should start in STATE_2 i.e. receiving from floor first
+		assertEquals(scheduler.getCurrentState2().toString(), "STATE_2");
+		
+		scheduler.receiveStateMachine(request, ""); //Executing STATE_2
+		
+		// State should be set to STATE_! after completing STATE_2
+		assertEquals(scheduler.getCurrentState2().toString(), "STATE_1");
+		
+	}
+	
+	/**
+	 * Testing receiving from floor
+	 */
+	public void testReceiveFromFloor() {
+		// Receive request from floor
+		scheduler.receiveFromFloor("", request);
+		
+		assertEquals(scheduler.getFloorToVisit(), this.floorToVisit);
+		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+	}
+
+	/**
+	 * Testing receiving from elevator
+	 */
+	public void testReceiveFromElevator() {
+		String data = "arrived " + request.getFloorDestination();
+		// Getting request from floor and sending it to elevator
+		scheduler.receiveFromFloor("", request);
+		
+		assertEquals(scheduler.getFloorToVisit(), this.floorToVisit);
+		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		
+		// Send request to elevator
+		scheduler.sendToElevator();
+		// Receiving the elevator's response to the request
 		scheduler.receiveFromElevator(data);
-		assertEquals(data, scheduler.getDataElevator());
-		assertEquals(false, scheduler.isEmptyElevator());
+		
+		assertEquals(scheduler.getCurrentFloor(), request.getFloorDestination());
+		assertEquals(scheduler.getIsDataFromFloor(), "");
+		assert(scheduler.getDataFromElevator().equals(data));
+		assert(!scheduler.isEmptyElevator());
 	}
-
-	/*
-	 * Expected:
-	 * 	dataElevator = ""
-	 * 	emptyFloor = true
+	
+	/**
+	 * Testing sending to floor
 	 */
 	public void testSendToFloor() {
-		scheduler.receiveFromElevator(data);
-		String dataForFloor = scheduler.sendToFloor();
+		String data = "arrived " + request.getFloorDestination();
 		
-		assertEquals(data, dataForFloor);
-		assertEquals("", scheduler.getDataElevator());
-		assertEquals(true, scheduler.isEmptyFloor());
+		// Sending request to elevator and receiving the response to be sent to the floor
+		scheduler.receiveFromFloor("", request);
+		scheduler.sendToElevator();	
+		scheduler.receiveFromElevator(data);
+		
+		assertEquals(scheduler.getDataFromElevator(), data);
+		assert(!scheduler.isEmptyFloor());
+		
+		scheduler.sendToFloor(); // sending response to floor
+		
+		assertEquals(scheduler.getDataFromElevator(), "");
+		assert(scheduler.isEmptyFloor()); // floor is empty
+		
 	}
-
-	/*
-	 * Expected:
-	 * 	dataFloor = ""
-	 * 	emptyFloor = true
+	
+	/**
+	 * Testing sending to elevator
 	 */
 	public void testSendToElevator() {
-		scheduler.receiveFromFloor(data);
-		String dataForElevator = scheduler.sendToElevator();
+		// Receiving request from floor to be sent to the elevator
+		scheduler.receiveFromFloor("", request);
 		
-		assertEquals(data, dataForElevator);
-		assertEquals("", scheduler.getDataFloor());
-		assertEquals(true, scheduler.isEmptyElevator());
+		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		assert(scheduler.isEmptyElevator());
+		
+		// Sending response to elevator
+		scheduler.sendToElevator();
+		
+		assertEquals(scheduler.getIsDataFromFloor(),"");
+		assert(scheduler.isEmptyElevator()); // elevator is not empty
 	}
-
-	/*
-	public void testCheckPriority() {
-		fail("Not yet implemented");
-	}
-	*/
 
 }

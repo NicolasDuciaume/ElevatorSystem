@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Scheduler {
-	
+
 	private ArrayList<Integer> upQueue;
 	private ArrayList<Integer> downQueue;
 	private int currentFloor;
@@ -16,10 +16,9 @@ public class Scheduler {
 	private int floorToVisit;
 	private boolean emptyFloor;
 	private boolean emptyElevator;
-	
-	private SchedulerStates currentState, currentState2;
-	
-	private enum SchedulerStates {
+	private SchedulerStates currentState1, currentState2;
+
+	public enum SchedulerStates {
 		INITIAL_STATE, STATE_1, STATE_2;
 	}
 
@@ -32,43 +31,42 @@ public class Scheduler {
 		floorToVisit = -1;
 		emptyFloor = true;
 		emptyElevator = true;
-		
-		currentState = SchedulerStates.STATE_1;
+
+		currentState1 = SchedulerStates.STATE_1;
 		currentState2 = SchedulerStates.STATE_2;
-		
-		
+
 	}
 
 	public Object sendStateMachine() {
 		Object objectReturned = null;
-		switch(currentState) {
+		switch (currentState1) {
 		case STATE_1:
 			objectReturned = sendToElevator();
-			currentState = SchedulerStates.STATE_2;
+			currentState1 = SchedulerStates.STATE_2;
 			break;
 		case STATE_2:
 			objectReturned = sendToFloor();
-			currentState = SchedulerStates.STATE_1;
+			currentState1 = SchedulerStates.STATE_1;
 			break;
 		}
 		return objectReturned;
 	}
 
-	public void receiveStateMachine(FloorRequest floorRequest,String floorElevatorData) {
-		switch(currentState2) {
-			case STATE_1:
-				receiveFromElevator(floorElevatorData);
-				currentState2 = SchedulerStates.STATE_2;
-				break;
-			case STATE_2:
-				receiveFromFloor(floorElevatorData,floorRequest);
-				currentState2 = SchedulerStates.STATE_1;
-				break;
+	public void receiveStateMachine(FloorRequest floorRequest, String floorElevatorData) {
+		switch (currentState2) {
+		case STATE_1:
+			receiveFromElevator(floorElevatorData);
+			currentState2 = SchedulerStates.STATE_2;
+			break;
+		case STATE_2:
+			receiveFromFloor(floorElevatorData, floorRequest);
+			currentState2 = SchedulerStates.STATE_1;
+			break;
 		}
 	}
-	
+
 	public synchronized void receiveFromFloor(String data, FloorRequest floor) {
-		while(!this.isDataFromFloor.equals("")) {
+		while (!this.isDataFromFloor.equals("")) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -92,7 +90,7 @@ public class Scheduler {
 	}
 
 	public synchronized void receiveFromElevator(String data) {
-		while(!this.dataFromElevator.equals("")) {
+		while (!this.dataFromElevator.equals("")) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -119,7 +117,7 @@ public class Scheduler {
 	}
 
 	public synchronized String sendToFloor() {
-		while(this.dataFromElevator.equals("")) {
+		while (this.dataFromElevator.equals("")) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -135,7 +133,7 @@ public class Scheduler {
 	}
 
 	public synchronized FloorRequest sendToElevator() {
-		while(this.isDataFromFloor.equals("")) {
+		while (this.isDataFromFloor.equals("")) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -146,7 +144,8 @@ public class Scheduler {
 		this.isDataFromFloor = "";
 		emptyElevator = true;
 		notifyAll();
-		return new FloorRequest(new Timestamp(System.currentTimeMillis()), -1L, -1L, this.currentFloor, this.floorToVisit, this.direction);
+		return new FloorRequest(new Timestamp(System.currentTimeMillis()), -1L, -1L, this.currentFloor,
+				this.floorToVisit, this.direction);
 	}
 
 	public synchronized void checkPriority(int floor) {
@@ -171,10 +170,10 @@ public class Scheduler {
 
 		if (!this.upQueue.isEmpty() || !this.downQueue.isEmpty()) {
 			if (this.direction == Direction.UP) {
-				toVisit = (Integer)this.upQueue.get(0);
+				toVisit = (Integer) this.upQueue.get(0);
 				this.upQueue.remove(0);
 			} else if (this.direction == Direction.DOWN) {
-				toVisit = (Integer)this.downQueue.get(0);
+				toVisit = (Integer) this.downQueue.get(0);
 				this.downQueue.remove(0);
 			}
 		}
@@ -182,11 +181,7 @@ public class Scheduler {
 		return toVisit;
 	}
 
-	public String getDataFloor() {
-		return this.isDataFromFloor;
-	}
-
-	public String getDataElevator() {
+	public String getDataFromElevator() {
 		return this.dataFromElevator;
 	}
 
@@ -196,5 +191,29 @@ public class Scheduler {
 
 	public boolean isEmptyElevator() {
 		return this.emptyElevator;
+	}
+	
+	public SchedulerStates getCurrentState1() {
+		return this.currentState1;
+	}
+	
+	public SchedulerStates getCurrentState2() {
+		return this.currentState2;
+	}
+	
+	public Direction getDirection() {
+		return this.direction;
+	}
+	
+	public int getFloorToVisit() {
+		return this.floorToVisit;
+	}
+	
+	public int getCurrentFloor() {
+		return this.currentFloor;
+	}
+	
+	public String getIsDataFromFloor() {
+		return this.isDataFromFloor;
 	}
 }

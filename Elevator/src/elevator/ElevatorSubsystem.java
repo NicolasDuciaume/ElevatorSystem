@@ -24,11 +24,11 @@ public class ElevatorSubsystem implements Runnable {
 		doorOpen = true;
 		floorRequests = new PriorityQueue<FloorRequest>();
 		elevatorLamps = new boolean[8];
-		
+
 		for (int i = 0; i < elevatorLamps.length; ++i) {
 			elevatorLamps[i] = false;
 		}
-		
+
 		elevatorButtons = new int[8];
 		for (int i = 0; i < this.elevatorButtons.length; ++i) {
 			elevatorButtons[i] = i + 1;
@@ -105,7 +105,31 @@ public class ElevatorSubsystem implements Runnable {
 		}
 	}
 
-	private static enum ElevatorStates {
+	/**
+	 * Getters for Unit Testing
+	 * 
+	 */
+	public Direction getMotorState() {
+		return this.motorState;
+	}
+
+	public boolean isDoorOpen() {
+		return this.doorOpen;
+	}
+
+	public Direction getDirectionLamp() {
+		return this.directionLamp;
+	}
+
+	public FloorRequest getData() {
+		return this.data;
+	}
+
+	public ElevatorStates getCurrentState() {
+		return this.currentState;
+	}
+
+	public static enum ElevatorStates {
 		INITIAL_STATE, STATE_1, STATE_2, STATE_3;
 
 		private ElevatorStates() {

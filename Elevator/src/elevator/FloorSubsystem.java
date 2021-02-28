@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FloorSubsystem implements Runnable {
-	
+
 	private String data;
 	private Scheduler scheduler;
 	private ArrayList<FloorRequest> listofRequests;
@@ -90,5 +90,14 @@ public class FloorSubsystem implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Getter for Unit Testing
+	 * 
+	 * @return listOfRequests
+	 */
+	public ArrayList<FloorRequest> getListOfRequests() {
+		return this.listofRequests;
 	}
 }
