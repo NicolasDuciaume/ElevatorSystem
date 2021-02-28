@@ -3,6 +3,11 @@ package elevatorTests;
 import junit.framework.TestCase;
 import elevator.*;
 
+/**
+ * 
+ * @author Nazifa Tanzim 101074707
+ *
+ */
 public class FloorSubsystemTest extends TestCase {
 	private String fileLocation;
 	private FloorSubsystem floor;

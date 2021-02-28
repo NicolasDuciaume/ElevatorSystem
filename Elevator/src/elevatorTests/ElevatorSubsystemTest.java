@@ -4,6 +4,11 @@ import junit.framework.TestCase;
 
 import elevator.*;
 
+/**
+ * 
+ * @author Nazifa Tanzim 101074707
+ *
+ */
 public class ElevatorSubsystemTest extends TestCase {
 	Scheduler scheduler;
 	private ElevatorSubsystem elevator;
