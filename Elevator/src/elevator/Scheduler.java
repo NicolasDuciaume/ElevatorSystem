@@ -4,6 +4,15 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * 
+ * Schedular handles communication between Elevator and Floors using a state machine
+ * 
+ * @author Tooba Sheikh      101028915
+ * @author Jameel Alidina    101077040
+ * @author Nicolas Duciaume  101124713
+ * @author Chris D'Silva     101067295
+ */
 public class Scheduler {
 
 	private ArrayList<Integer> upQueue;
@@ -18,10 +27,17 @@ public class Scheduler {
 	private boolean emptyElevator;
 	private SchedulerStates currentState1, currentState2;
 
+	/**
+	 *Enum for the states
+	 *
+	 */
 	public enum SchedulerStates {
 		INITIAL_STATE, STATE_1, STATE_2;
 	}
 
+	/**
+	 * Initializes all the variables
+	 */
 	public Scheduler() {
 		upQueue = new ArrayList<Integer>();
 		downQueue = new ArrayList<Integer>();
@@ -37,6 +53,11 @@ public class Scheduler {
 
 	}
 
+	/**
+	 * A send state machine
+	 * 
+	 * @return
+	 */
 	public Object sendStateMachine() {
 		Object objectReturned = null;
 		switch (currentState1) {
@@ -52,6 +73,12 @@ public class Scheduler {
 		return objectReturned;
 	}
 
+	/**
+	 * A receive state machine 
+	 * 
+	 * @param floorRequest
+	 * @param floorElevatorData
+	 */
 	public void receiveStateMachine(FloorRequest floorRequest, String floorElevatorData) {
 		switch (currentState2) {
 		case STATE_1:
@@ -65,6 +92,12 @@ public class Scheduler {
 		}
 	}
 
+	/**
+	 * Receives data from the floor 
+	 * 
+	 * @param data An ready to go message or nothing
+	 * @param floor a floor request
+	 */
 	public synchronized void receiveFromFloor(String data, FloorRequest floor) {
 		while (!this.isDataFromFloor.equals("")) {
 			try {
@@ -89,6 +122,11 @@ public class Scheduler {
 		this.notifyAll();
 	}
 
+	/**
+	 * receives data from the elevator
+	 * 
+	 * @param data the info received from the elevator, either an arrival message or a button press 
+	 */
 	public synchronized void receiveFromElevator(String data) {
 		while (!this.dataFromElevator.equals("")) {
 			try {
@@ -99,12 +137,13 @@ public class Scheduler {
 			}
 		}
 
+		//Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = data.split(" ");
 		if (!splitElevatorMsg[0].equals("arrived") && !data.equals("waiting")) {
 			this.checkPriority(Integer.parseInt(data));
 			this.floorToVisit = this.checkSend();
 			this.notifyAll();
-		} else {
+		} else { // if button pressed
 			if (splitElevatorMsg[0].equals("arrived")) {
 				this.currentFloor = Integer.parseInt(splitElevatorMsg[1]);
 			}
@@ -116,6 +155,12 @@ public class Scheduler {
 
 	}
 
+	/**
+	 * Sends data to the floor
+	 * 
+	 * @return the instructions to the floor, right now just an arriving message
+	 * TODO: Turn on lamps on floor  
+	 */
 	public synchronized String sendToFloor() {
 		while (this.dataFromElevator.equals("")) {
 			try {
@@ -132,6 +177,9 @@ public class Scheduler {
 		return dataFromElevator;
 	}
 
+	/**
+	 * @return sends the floor requested to the elevator
+	 */
 	public synchronized FloorRequest sendToElevator() {
 		while (this.isDataFromFloor.equals("")) {
 			try {
@@ -148,6 +196,11 @@ public class Scheduler {
 				this.floorToVisit, this.direction);
 	}
 
+	/**
+	 * Adds the floor to the right queue  
+	 * 
+	 * @param floor thats is the floor that need to be added to the queue
+	 */
 	public synchronized void checkPriority(int floor) {
 		if (this.currentFloor < floor) {
 			this.upQueue.add(floor);
@@ -160,6 +213,11 @@ public class Scheduler {
 
 	}
 
+	/**
+	 * Check send basically organizes which QUEUE is going to the elevator first 
+	 * 
+	 * @return
+	 */
 	private synchronized int checkSend() {
 		int toVisit = -1;
 		if (this.upQueue.isEmpty() && !this.downQueue.isEmpty()) {
@@ -181,6 +239,7 @@ public class Scheduler {
 		return toVisit;
 	}
 
+	/* For testing purposes */
 	public String getDataFromElevator() {
 		return this.dataFromElevator;
 	}

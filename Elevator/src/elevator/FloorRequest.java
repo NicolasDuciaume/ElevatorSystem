@@ -1,7 +1,15 @@
 package elevator;
-
 import java.sql.Timestamp;
 
+/**
+ * 
+ * Class that contains a FloorRequest object which will be send between
+ * FloorSubsystem, Scheduler, and ElevatorSubsystem
+ * 
+ * @author Tooba Sheikh    101028915
+ * @author Jameel Alidina  101077040
+ *
+ */
 public class FloorRequest {
 
 	private Timestamp requestTime;
@@ -11,6 +19,17 @@ public class FloorRequest {
 	private int floorDestination;
 	private Direction direction;
 
+	 /**
+     * 
+     * Initializes all the variables, when parameter are given
+     * 
+     * @param requestTime     	Current real time of the elevator
+     * @param travelTime      	Time it takes for the elevator to run travel between one floor to the other
+     * @param doorTime        	Time it takes for the door to open/close
+     * @param floorOrigin     	The original floor the elevator was called on
+     * @param floorDestination	The destination floor
+     * @param direction			The direction the elevator need to go 
+     */
 	public FloorRequest(Timestamp requestTime, long travelTime, long doorTime, int floorOrigin, int floorDestination,
 			Direction direction) {
 		this.requestTime = requestTime;
@@ -21,6 +40,9 @@ public class FloorRequest {
 		this.doorTime = doorTime;
 	}
 
+	/**
+     * A default constructor for the elevator, when there is no elevator request, but the elevator is stopped.   
+     */
 	public FloorRequest() {
 		this.requestTime = new Timestamp(System.currentTimeMillis());
 		this.direction = Direction.STOPPED;
@@ -30,29 +52,47 @@ public class FloorRequest {
 		this.doorTime = -1L;
 	}
 
-	public Timestamp getRequestTime() {
-		return this.requestTime;
-	}
+	/**
+     * @return the time stamp  
+     */
+    public Timestamp getRequestTime() {
+        return this.requestTime;
+    }
 
-	public long getTravelTime() {
-		return this.travelTime;
-	}
+    /**
+     * @return travel time of this elevator
+     */
+    public long getTravelTime() {
+        return this.travelTime;
+    }
 
-	public int getFloorRequestOrigin() {
-		return this.floorRequestOrigin;
-	}
+    /**
+     * @return the original floor
+     */
+    public int getFloorRequestOrigin() {
+        return this.floorRequestOrigin;
+    }
 
-	public Direction getDirection() {
-		return this.direction;
-	}
+    /**
+     * @return returns directions
+     */
+    public Direction getDirection() {
+        return this.direction;
+    }
 
-	public int getFloorDestination() {
-		return this.floorDestination;
-	}
+    /**
+     * @return the destination floor
+     */
+    public int getFloorDestination() {
+        return this.floorDestination;
+    }
 
-	public long getDoorTime() {
-		return this.doorTime;
-	}
+    /**
+     * @return the door close/open time 
+     */
+    public long getDoorTime() {
+        return this.doorTime;
+    }
 	
 //	@Override
 //	public boolean equals(Object obj) {
