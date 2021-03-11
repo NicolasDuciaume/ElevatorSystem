@@ -154,9 +154,9 @@ public class Scheduler {
 
 		//Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = name.split(" ");
-		if (!splitElevatorMsg[0].equals("arrived")) {
+		if (!splitElevatorMsg[0].equals("arrived")) { // if button pressed
 			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]));
-		} else { // if button pressed
+		} else { // if arrived to floor
 			if (splitElevatorMsg[0].equals("arrived")) {
 				temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[1]));
 			}
@@ -189,7 +189,7 @@ public class Scheduler {
 	public synchronized void sendToElevator() {
 		ElevatorData temp = elevators.get(0);
 		byte[] toSend = new byte[100];
-		int t = checkSend(temp);
+		int t = checkSend(temp); // send the appropriate floor request based on the elevator
 		if(t == -1){
 			String wait = "waiting";
 			toSend = wait.getBytes();
