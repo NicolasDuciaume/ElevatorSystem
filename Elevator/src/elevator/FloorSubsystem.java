@@ -25,6 +25,7 @@ public class FloorSubsystem implements Runnable {
 	public int requestCount = 0;
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
+	private String wait = "waiting";
 
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
@@ -133,7 +134,7 @@ public class FloorSubsystem implements Runnable {
 
 			System.out.println("Floor Sent: " + this.data);
 			this.data = "";
-			this.data = (String) scheduler.sendStateMachine();
+			//this.data = (String) scheduler.sendStateMachine();
 			System.out.println("Floor Received: " + this.data);
 			String[] splitElevatorResponse = this.data.split(" ");
 			if (splitElevatorResponse[1].equals("-1")) {
@@ -153,21 +154,80 @@ public class FloorSubsystem implements Runnable {
 	}
 
 	public void TestSend(){
-		FloorRequest f = listofRequests.get(0);
-		String temp = f.toString();
-		byte[] toSend = temp.getBytes();
-		try {
-			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+		if(listofRequests.size() == 0){
+			String temp = "go";
+			byte[] toSend = temp.getBytes();
+			try {
+				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 
-		try {
-			this.sendReceiveSocket.send(this.sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+			try {
+				this.sendReceiveSocket.send(this.sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			if(wait.equals("waiting")){
+				System.out.println("Floor has nothing to send");
+				wait = "";
+			}
+		}
+		else{
+			FloorRequest f = listofRequests.get(0);
+			wait = "waiting";
+			String temp = f.toString();
+			byte[] toSend = temp.getBytes();
+			try {
+				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			try {
+				this.sendReceiveSocket.send(this.sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			System.out.println("Floor Sent: " + temp);
+
+			byte[] data = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+			try {
+				sendReceiveSocket.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} // Receive data from Scheduler
+			String temp2 ="";
+			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
+			if (splitElevatorResponse[0].equals("arrived")) {
+				this.setLampsSensors(splitElevatorResponse[1]);
+				temp2 = "go";
+			}
+			System.out.println("Floor received: " + toPrint);
+			byte[] toSend2 = temp2.getBytes();
+			try {
+				this.sendPacket = new DatagramPacket(toSend2, toSend2.length, InetAddress.getLocalHost(), 69);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			try {
+				this.sendReceiveSocket.send(this.sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			System.out.println("Floor Sent: " + temp2);
+			listofRequests.remove(0);
 		}
 	}
 
@@ -183,6 +243,8 @@ public class FloorSubsystem implements Runnable {
 	public static void main(String[] args){
 		FloorSubsystem floor = new FloorSubsystem("File.txt");
 		floor.Initialize();
-		floor.TestSend();
+		while(true){
+			floor.TestSend();
+		}
 	}
 }

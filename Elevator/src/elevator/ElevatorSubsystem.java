@@ -25,6 +25,7 @@ public class ElevatorSubsystem implements Runnable {
 	private Scheduler scheduler; //Scheduler object used to receive and pass data
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
+	private String[] cut = new String[2];
 
 	/**
      * Instantiates the variables  
@@ -85,23 +86,23 @@ public class ElevatorSubsystem implements Runnable {
      * Depending on the current state, sets the direction in which the elevator needs to move
      * or if stationary, then turns on lamps 
      * 
-     * @param request object containing the next floor to visit information 
+     *
      * @param type Used to identify whether the elevator needs directions or need the floor lamps.
      */
-	public void parseData(FloorRequest request, String type) {
+	public void parseData(String x, String type) {
 		//TODO: Check if data being parsed is from user or scheduler
     	//TODO: If there is a request while elevator is moving to a targeted floor
     	//		direction will have to be adjusted depending on the request
 		if (type.equals("Direction")) {
-			if (request.getDirection() == Direction.UP) {
+			if (x.equals("UP")) {
 				motorState = Direction.UP;
-			} else if (request.getDirection() == Direction.DOWN) {
+			} else if (x.equals("DOWN")) {
 				motorState = Direction.DOWN;
 			}
 		}
 
 		if (type.equals("Floor Number")) {
-			this.elevatorLamps[request.getFloorRequestOrigin() - 1] = true;
+			this.elevatorLamps[Integer.parseInt(x) - 1] = true;
 		}
 
 	}
@@ -110,12 +111,20 @@ public class ElevatorSubsystem implements Runnable {
 	 * State Machine that will complete ElevatorSubsystem operations
 	 */
 	public void stateMachine() {
+
 		switch (currentState) {
 		case INITIAL_STATE: //Elevator stopped with doors open
-			data = (FloorRequest) scheduler.sendStateMachine(); // Receive data from Scheduler
-
-			System.out.println("Elevator Received: " + data);
-			if (data == null) {
+			byte[] data = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+			try {
+				sendReceiveSocket.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} // Receive data from Scheduler
+			String dat = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+			System.out.println("Elevator Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
+			if (dat.equals("waiting")) {
 				currentState = ElevatorStates.INITIAL_STATE;
 			} else {
 				currentState = ElevatorStates.STATE_1;
@@ -125,13 +134,14 @@ public class ElevatorSubsystem implements Runnable {
 			// TODO: Timer Event needed for future Iterations. Door open time,
 			// movement time between floors.
 			doorOpen = false;
-			parseData(data, "Direction");
+			this.cut = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
+			parseData(this.cut[1], "Direction");
 			currentState = ElevatorStates.STATE_2;
 			break;
 		case STATE_2: //Elevator moving
 			// Turn on lamps
 			directionLamp = motorState;
-			parseData(data, "Floor Number");
+			parseData(this.cut[0], "Floor Number");
 			// Listen to request implementation
 
 			currentState = ElevatorStates.STATE_3;
@@ -141,7 +151,21 @@ public class ElevatorSubsystem implements Runnable {
 			doorOpen = true;
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
-			String msg = "arrived " + data.getFloorDestination();
+			String msg = "arrived " + this.cut[0];
+			byte[] toSend = msg.getBytes();
+			try {
+				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			try {
+				this.sendReceiveSocket.send(this.sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 			//scheduler.receiveStateMachine(null, msg); // Send data from elevator to Scheduler
 			System.out.println("Elevator Sent: " + msg);
 			currentState = ElevatorStates.INITIAL_STATE;
@@ -205,5 +229,8 @@ public class ElevatorSubsystem implements Runnable {
 	public static void main(String[] args){
 		ElevatorSubsystem elevator = new ElevatorSubsystem();
 		elevator.Initialize();
+		while(true){
+			elevator.stateMachine();
+		}
 	}
 }
