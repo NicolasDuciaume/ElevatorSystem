@@ -2,6 +2,8 @@ package elevator;
 
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
+import java.io.IOException;
+import java.net.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Scanner; //Import this class to accept input
@@ -21,17 +23,51 @@ public class FloorSubsystem implements Runnable {
 	private Scheduler scheduler;
 	private ArrayList<FloorRequest> listofRequests;
 	public int requestCount = 0;
+	private DatagramPacket sendPacket, receivePacket;
+	private DatagramSocket sendReceiveSocket;
 
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
 	 * 
 	 * @param FileLocation String that indicates the name and path of the input file
-	 * @param scheduler    Object that shares data between threads
+	 *
 	 */
-	public FloorSubsystem(String FileLocation, Scheduler scheduler) {
-		this.scheduler = scheduler;
+	public FloorSubsystem(String FileLocation) {
+		//this.scheduler = scheduler;
 		this.listofRequests = new ArrayList<FloorRequest>();
 		this.addFloorRequest(FileLocation);
+		try {
+			sendReceiveSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
+	}
+
+	public void Initialize(){
+		byte[] toSend = new byte[100];
+		try {
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		try {
+			this.sendReceiveSocket.send(this.sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+	}
+
+	private static String toString(byte[] temp) {
+		StringBuilder builder = new StringBuilder();
+		for (byte b : temp) {
+			builder.append(String.format("%02X ", b));
+		}
+		return builder.toString();
 	}
 
 	/**
@@ -62,7 +98,7 @@ public class FloorSubsystem implements Runnable {
 					requestDirection = Direction.STOPPED;
 				}
 
-				FloorRequest request = new FloorRequest(requestTime, travelTime, doorTime,
+				FloorRequest request = new FloorRequest(requestArray[0], travelTime, doorTime,
 						Integer.parseInt(requestArray[1]), Integer.parseInt(requestArray[3]), requestDirection);
 				this.listofRequests.add(request);
 			}
@@ -88,11 +124,11 @@ public class FloorSubsystem implements Runnable {
 			// TODO: Change if statement to a loop so we can process more than 1 request
 			if (requestCount == 0) {
 				FloorRequest r = listofRequests.get(0);
-				scheduler.receiveStateMachine(r, "");
+				//scheduler.receiveStateMachine(r, "");
 				this.listofRequests.remove(r);
 				requestCount++;
 			} else {
-				scheduler.receiveStateMachine(null, data);
+				//scheduler.receiveStateMachine(null, data);
 			}
 
 			System.out.println("Floor Sent: " + this.data);
@@ -116,6 +152,25 @@ public class FloorSubsystem implements Runnable {
 		}
 	}
 
+	public void TestSend(){
+		FloorRequest f = listofRequests.get(0);
+		String temp = f.toString();
+		byte[] toSend = temp.getBytes();
+		try {
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		try {
+			this.sendReceiveSocket.send(this.sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+
 	/**
 	 * Getter for Unit Testing
 	 * 
@@ -123,5 +178,11 @@ public class FloorSubsystem implements Runnable {
 	 */
 	public ArrayList<FloorRequest> getListOfRequests() {
 		return this.listofRequests;
+	}
+
+	public static void main(String[] args){
+		FloorSubsystem floor = new FloorSubsystem("File.txt");
+		floor.Initialize();
+		floor.TestSend();
 	}
 }

@@ -15,7 +15,7 @@ public class FloorSubsystemTest extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		fileLocation = "File.txt";
-		floor = new FloorSubsystem(fileLocation, new Scheduler());
+		//floor = new FloorSubsystem(fileLocation, new Scheduler());
 	}
 
 	/**

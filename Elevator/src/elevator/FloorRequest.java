@@ -12,7 +12,7 @@ import java.sql.Timestamp;
  */
 public class FloorRequest {
 
-	private Timestamp requestTime;
+	private String requestTime;
 	private long travelTime;
 	private long doorTime;
 	private int floorRequestOrigin;
@@ -30,7 +30,7 @@ public class FloorRequest {
      * @param floorDestination	The destination floor
      * @param direction			The direction the elevator need to go 
      */
-	public FloorRequest(Timestamp requestTime, long travelTime, long doorTime, int floorOrigin, int floorDestination,
+	public FloorRequest(String requestTime, long travelTime, long doorTime, int floorOrigin, int floorDestination,
 			Direction direction) {
 		this.requestTime = requestTime;
 		this.direction = direction;
@@ -44,7 +44,7 @@ public class FloorRequest {
      * A default constructor for the elevator, when there is no elevator request, but the elevator is stopped.   
      */
 	public FloorRequest() {
-		this.requestTime = new Timestamp(System.currentTimeMillis());
+		this.requestTime = (String.valueOf(new Timestamp(System.currentTimeMillis())));
 		this.direction = Direction.STOPPED;
 		this.floorDestination = -1;
 		this.floorRequestOrigin = -1;
@@ -55,7 +55,7 @@ public class FloorRequest {
 	/**
      * @return the time stamp  
      */
-    public Timestamp getRequestTime() {
+    public String getRequestTime() {
         return this.requestTime;
     }
 
@@ -93,6 +93,11 @@ public class FloorRequest {
     public long getDoorTime() {
         return this.doorTime;
     }
+
+    public String toString(){
+    	String stringVersion= getRequestTime() + " " + getFloorRequestOrigin() + " " + getDirection() + " " + getFloorDestination();
+    	return stringVersion;
+	}
 	
 //	@Override
 //	public boolean equals(Object obj) {

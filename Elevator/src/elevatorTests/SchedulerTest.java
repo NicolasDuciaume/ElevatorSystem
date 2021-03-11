@@ -21,7 +21,7 @@ public class SchedulerTest extends TestCase {
 		super.setUp();
 
 		scheduler = new Scheduler();
-		floor = new FloorSubsystem("File.txt", scheduler);
+		//floor = new FloorSubsystem("File.txt", scheduler);
 		request = floor.getListOfRequests().remove(0);
 		floorToVisit = 2;
 	}

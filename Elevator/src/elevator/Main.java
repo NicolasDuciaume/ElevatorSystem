@@ -6,7 +6,7 @@ package elevator;
 public class Main {
 	public static void main(String[] args) {
 
-		Thread Floor, Elevator; // Declaring two threads
+		/*Thread Floor, Elevator; // Declaring two threads
 		Scheduler schedular;
 
 		// Initializing
@@ -16,6 +16,6 @@ public class Main {
 
 		// Starting the threads
 		Floor.start();
-		Elevator.start();
+		Elevator.start();*/
 	}
 }

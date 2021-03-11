@@ -1,5 +1,10 @@
 package elevator;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +31,11 @@ public class Scheduler {
 	private boolean emptyFloor;
 	private boolean emptyElevator;
 	private SchedulerStates currentState1, currentState2;
+	private DatagramPacket receivePacket, sendPacket;
+	private DatagramSocket sendReceiveSocketFloor, sendReceiveSocketElevators;
+	private int portFloor;
+	private InetAddress addressFloor;
+	private ArrayList<ElevatorData> elevators;
 
 	/**
 	 *Enum for the states
@@ -51,6 +61,25 @@ public class Scheduler {
 		currentState1 = SchedulerStates.STATE_1;
 		currentState2 = SchedulerStates.STATE_2;
 
+		elevators = new ArrayList<>();
+
+		try {
+			sendReceiveSocketFloor = new DatagramSocket(69);
+			sendReceiveSocketElevators = new DatagramSocket(420);
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
+
+	}
+
+	private void sendAndReceive() {
+		byte[] data = new byte[100];
+		receivePacket = new DatagramPacket(data, data.length);
+		while (true) {
+			this.receiveStateMachine(data);
+			this.sendStateMachine();
+		}
 	}
 
 	/**
@@ -62,7 +91,7 @@ public class Scheduler {
 		Object objectReturned = null;
 		switch (currentState1) {
 		case STATE_1:
-			objectReturned = sendToElevator();
+			//objectReturned = sendToElevator();
 			currentState1 = SchedulerStates.STATE_2;
 			break;
 		case STATE_2:
@@ -75,18 +104,16 @@ public class Scheduler {
 
 	/**
 	 * A receive state machine 
-	 * 
-	 * @param floorRequest
-	 * @param floorElevatorData
+	 *
 	 */
-	public void receiveStateMachine(FloorRequest floorRequest, String floorElevatorData) {
+	public void receiveStateMachine(byte[] data) {
 		switch (currentState2) {
 		case STATE_1:
-			receiveFromElevator(floorElevatorData);
+			//receiveFromElevator(floorElevatorData);
 			currentState2 = SchedulerStates.STATE_2;
 			break;
 		case STATE_2:
-			receiveFromFloor(floorElevatorData, floorRequest);
+			receiveFromFloor(data);
 			currentState2 = SchedulerStates.STATE_1;
 			break;
 		}
@@ -96,30 +123,17 @@ public class Scheduler {
 	 * Receives data from the floor 
 	 * 
 	 * @param data An ready to go message or nothing
-	 * @param floor a floor request
 	 */
-	public synchronized void receiveFromFloor(String data, FloorRequest floor) {
-		while (!this.isDataFromFloor.equals("")) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				return;
-			}
+	public synchronized void receiveFromFloor(byte[] data) {
+		try {
+			sendReceiveSocketFloor.receive(receivePacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
 		}
+		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 
-		if (floor != null) {
-			this.checkPriority(floor.getFloorRequestOrigin());
-			this.checkPriority(floor.getFloorDestination());
-			this.floorToVisit = this.checkSend();
-			this.isDataFromFloor = "ok";
-		} else {
-			this.floorToVisit = this.checkSend();
-			this.isDataFromFloor = "ok";
-		}
-
-		this.emptyFloor = false;
-		this.notifyAll();
+		System.out.println(name);
 	}
 
 	/**
@@ -192,7 +206,7 @@ public class Scheduler {
 		this.isDataFromFloor = "";
 		emptyElevator = true;
 		notifyAll();
-		return new FloorRequest(new Timestamp(System.currentTimeMillis()), -1L, -1L, this.currentFloor,
+		return new FloorRequest((String.valueOf(new Timestamp(System.currentTimeMillis()))), -1L, -1L, this.currentFloor,
 				this.floorToVisit, this.direction);
 	}
 
@@ -202,15 +216,15 @@ public class Scheduler {
 	 * @param floor thats is the floor that need to be added to the queue
 	 */
 	public synchronized void checkPriority(int floor) {
-		if (this.currentFloor < floor) {
-			this.upQueue.add(floor);
-			Collections.sort(this.upQueue);
-		} else if (this.currentFloor > floor) {
-			this.downQueue.add(floor);
-			Collections.sort(this.downQueue);
-			Collections.reverse(this.downQueue);
-		}
+		ElevatorData temp = elevators.get(0);
 
+		if (temp.getCurrentFloor() < floor) {
+			temp.addToUp(floor);
+			temp.sortArrays();
+		} else if (temp.getCurrentFloor() > floor) {
+			temp.addToDown(floor);
+			temp.sortArrays();
+		}
 	}
 
 	/**
@@ -219,20 +233,21 @@ public class Scheduler {
 	 * @return
 	 */
 	private synchronized int checkSend() {
+		ElevatorData temp = elevators.get(0);
 		int toVisit = -1;
-		if (this.upQueue.isEmpty() && !this.downQueue.isEmpty()) {
-			this.direction = Direction.DOWN;
-		} else if (!this.upQueue.isEmpty() && this.downQueue.isEmpty()) {
-			this.direction = Direction.UP;
+		if (temp.getUpQueue().isEmpty() && !temp.getDownQueue().isEmpty()) {
+			temp.setDirection(Direction.DOWN);
+		} else if (!temp.getUpQueue().isEmpty() && this.downQueue.isEmpty()) {
+			temp.setDirection(Direction.UP);
 		}
 
-		if (!this.upQueue.isEmpty() || !this.downQueue.isEmpty()) {
-			if (this.direction == Direction.UP) {
-				toVisit = (Integer) this.upQueue.get(0);
-				this.upQueue.remove(0);
-			} else if (this.direction == Direction.DOWN) {
-				toVisit = (Integer) this.downQueue.get(0);
-				this.downQueue.remove(0);
+		if (!temp.getUpQueue().isEmpty() || !temp.getDownQueue().isEmpty()) {
+			if (temp.getDirection() == Direction.UP) {
+				toVisit = (Integer) temp.getUpQueue().get(0);
+				temp.removeUp();
+			} else if (temp.getDirection() == Direction.DOWN) {
+				toVisit = (Integer) temp.getDownQueue().get(0);
+				temp.removeDown();
 			}
 		}
 
@@ -274,5 +289,51 @@ public class Scheduler {
 	
 	public String getIsDataFromFloor() {
 		return this.isDataFromFloor;
+	}
+
+	public void InitializePort(int numOfElevators){
+		byte[] data = new byte[100];
+		receivePacket = new DatagramPacket(data, data.length);
+		try {
+			sendReceiveSocketFloor.receive(receivePacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		portFloor = receivePacket.getPort();
+		addressFloor = receivePacket.getAddress();
+
+		for(int x = 0; x < numOfElevators; x++){
+			data = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+			try {
+				sendReceiveSocketElevators.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+			elevators.add(new ElevatorData(name, receivePacket.getPort(),receivePacket.getAddress(), 0));
+		}
+
+		System.out.println("Floor port is: " + portFloor + " and address is: " + addressFloor);
+		for(int z = 0; z < elevators.size(); z++){
+			ElevatorData temp = elevators.get(z);
+			System.out.println(temp.getName() + " port is: " + temp.getPort() + " and address is: " + temp.getAddress());
+		}
+	}
+
+	private static String toString(byte[] temp) {
+		StringBuilder builder = new StringBuilder();
+		for (byte b : temp) {
+			builder.append(String.format("%02X ", b));
+		}
+		return builder.toString();
+	}
+
+	public static void main(String[] args){
+		Scheduler scheduler = new Scheduler();
+		scheduler.InitializePort(1);
+		scheduler.sendAndReceive();
 	}
 }

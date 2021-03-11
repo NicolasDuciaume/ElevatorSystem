@@ -1,4 +1,6 @@
 package elevator;
+import java.io.IOException;
+import java.net.*;
 import java.util.*;
 
 /**
@@ -21,18 +23,26 @@ public class ElevatorSubsystem implements Runnable {
 	private boolean[] elevatorLamps; // array of lamps
 	private Direction directionLamp; //Directional lamp
 	private Scheduler scheduler; //Scheduler object used to receive and pass data
+	private DatagramPacket sendPacket, receivePacket;
+	private DatagramSocket sendReceiveSocket;
 
 	/**
      * Instantiates the variables  
      */
-	public ElevatorSubsystem(Scheduler scheduler) {
-		this.scheduler = scheduler;
+	public ElevatorSubsystem() {
+		//this.scheduler = scheduler;
 		currentState = ElevatorStates.INITIAL_STATE;
 		motorState = Direction.STOPPED;
 		data = new FloorRequest();
 		doorOpen = true;
 		floorRequests = new PriorityQueue<FloorRequest>();
 		elevatorLamps = new boolean[8];
+		try {
+			sendReceiveSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
 
 		//Initializing the lamps
 		for (int i = 0; i < elevatorLamps.length; ++i) {
@@ -49,6 +59,27 @@ public class ElevatorSubsystem implements Runnable {
 		//Initializing the directionLamp
 		directionLamp = Direction.STOPPED;
 	}
+
+	public void Initialize(){
+		byte[] toSend = new byte[100];
+		String name = "elevator";
+		toSend = name.getBytes();
+		try {
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		try {
+			this.sendReceiveSocket.send(this.sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+	}
+
 
 	/**
      * Depending on the current state, sets the direction in which the elevator needs to move
@@ -111,7 +142,7 @@ public class ElevatorSubsystem implements Runnable {
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
 			String msg = "arrived " + data.getFloorDestination();
-			scheduler.receiveStateMachine(null, msg); // Send data from elevator to Scheduler
+			//scheduler.receiveStateMachine(null, msg); // Send data from elevator to Scheduler
 			System.out.println("Elevator Sent: " + msg);
 			currentState = ElevatorStates.INITIAL_STATE;
 			break;
@@ -170,5 +201,9 @@ public class ElevatorSubsystem implements Runnable {
 
 		private ElevatorStates() {
 		}
+	}
+	public static void main(String[] args){
+		ElevatorSubsystem elevator = new ElevatorSubsystem();
+		elevator.Initialize();
 	}
 }

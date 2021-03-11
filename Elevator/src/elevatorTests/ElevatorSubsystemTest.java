@@ -19,8 +19,8 @@ public class ElevatorSubsystemTest extends TestCase {
 		super.setUp();
 
 		scheduler = new Scheduler();
-		elevator = new ElevatorSubsystem(scheduler);
-		floor = new FloorSubsystem("File.txt", scheduler);
+		//elevator = new ElevatorSubsystem(scheduler);
+		//floor = new FloorSubsystem("File.txt", scheduler);
 		request = floor.getListOfRequests().remove(0);
 	}
 
