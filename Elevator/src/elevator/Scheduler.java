@@ -189,7 +189,7 @@ public class Scheduler {
 	public synchronized void sendToElevator() {
 		ElevatorData temp = elevators.get(0);
 		byte[] toSend = new byte[100];
-		int t = checkSend();
+		int t = checkSend(temp);
 		if(t == -1){
 			String wait = "waiting";
 			toSend = wait.getBytes();
@@ -232,22 +232,21 @@ public class Scheduler {
 	 * 
 	 * @return
 	 */
-	private synchronized int checkSend() {
-		ElevatorData temp = elevators.get(0);
+	private synchronized int checkSend(ElevatorData elevator) {
 		int toVisit = -1;
-		if (temp.getUpQueue().isEmpty() && !temp.getDownQueue().isEmpty()) {
-			temp.setDirection(Direction.DOWN);
-		} else if (!temp.getUpQueue().isEmpty() && this.downQueue.isEmpty()) {
-			temp.setDirection(Direction.UP);
+		if (elevator.getUpQueue().isEmpty() && !elevator.getDownQueue().isEmpty()) {
+			elevator.setDirection(Direction.DOWN);
+		} else if (!elevator.getUpQueue().isEmpty() && this.downQueue.isEmpty()) {
+			elevator.setDirection(Direction.UP);
 		}
 
-		if (!temp.getUpQueue().isEmpty() || !temp.getDownQueue().isEmpty()) {
-			if (temp.getDirection() == Direction.UP) {
-				toVisit = (Integer) temp.getUpQueue().get(0);
-				temp.removeUp();
-			} else if (temp.getDirection() == Direction.DOWN) {
-				toVisit = (Integer) temp.getDownQueue().get(0);
-				temp.removeDown();
+		if (!elevator.getUpQueue().isEmpty() || !elevator.getDownQueue().isEmpty()) {
+			if (elevator.getDirection() == Direction.UP) {
+				toVisit = (Integer) elevator.getUpQueue().get(0);
+				elevator.removeUp();
+			} else if (elevator.getDirection() == Direction.DOWN) {
+				toVisit = (Integer) elevator.getDownQueue().get(0);
+				elevator.removeDown();
 			}
 		}
 
