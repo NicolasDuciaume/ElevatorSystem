@@ -95,7 +95,7 @@ public class FloorRequest {
     }
 
     public String toString(){
-    	String stringVersion= getRequestTime() + " " + getFloorRequestOrigin() + " " + getDirection() + " " + getFloorDestination();
+    	String stringVersion = getRequestTime() + " " + getFloorRequestOrigin() + " " + getDirection() + " " + getFloorDestination();
     	return stringVersion;
 	}
 	

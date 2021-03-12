@@ -3,15 +3,18 @@ package elevator;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * 
- * Scheduler handles communication between Elevator and Floors using a state machine
+ * Scheduler handles communication between Elevator and Floors using a state
+ * machine
  * 
- * @author Tooba Sheikh      101028915
- * @author Jameel Alidina    101077040
- * @author Nicolas Duciaume  101124713
- * @author Chris D'Silva     101067295
+ * @author Tooba Sheikh 101028915
+ * @author Jameel Alidina 101077040
+ * @author Nicolas Duciaume 101124713
+ * @author Chris D'Silva 101067295
  */
 public class Scheduler {
 
@@ -26,7 +29,7 @@ public class Scheduler {
 	private ArrayList<ElevatorData> elevators;
 
 	/**
-	 *Enum for the states
+	 * Enum for the states
 	 *
 	 */
 	public enum SchedulerStates {
@@ -85,11 +88,11 @@ public class Scheduler {
 			currentState1 = SchedulerStates.STATE_1;
 			break;
 		}
-		return ;
+		return;
 	}
 
 	/**
-	 * A receive state machine 
+	 * A receive state machine
 	 *
 	 */
 	public void receiveStateMachine(byte[] data) {
@@ -106,7 +109,7 @@ public class Scheduler {
 	}
 
 	/**
-	 * Receives data from the floor 
+	 * Receives data from the floor
 	 * 
 	 * @param data An ready to go message or nothing
 	 */
@@ -119,9 +122,10 @@ public class Scheduler {
 		}
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 		String[] cut = name.split(" ");
-		if(!cut[0].equals("go")){
-			checkPriority(Integer.parseInt(cut[1]));
-			checkPriority(Integer.parseInt(cut[3]));
+		if (!cut[0].equals("go")) {
+			// TODO: Need to figure out the direction to go to the floor where we pick up people
+			checkPriority(Integer.parseInt(cut[1]), cut[2]);
+			checkPriority(Integer.parseInt(cut[3]), cut[2]);
 			System.out.println(name);
 		}
 	}
@@ -129,7 +133,8 @@ public class Scheduler {
 	/**
 	 * Receives data from the elevator
 	 * 
-	 * @param data the info received from the elevator, either an arrival message or a button press 
+	 * @param data the info received from the elevator, either an arrival message or
+	 *             a button press
 	 */
 	public synchronized void receiveFromElevator(byte[] data) {
 		ElevatorData temp = elevators.get(0);
@@ -141,10 +146,10 @@ public class Scheduler {
 		}
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 
-		//Splits the message then compares to see what needs to be done
+		// Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = name.split(" ");
 		if (!splitElevatorMsg[0].equals("arrived")) { // if button pressed
-			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]));
+			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]), null);
 		} else { // if arrived to floor
 			if (splitElevatorMsg[0].equals("arrived")) {
 				temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[1]));
@@ -157,12 +162,12 @@ public class Scheduler {
 	 * Sends data to the floor
 	 * 
 	 * @return the instructions to the floor, right now just an arriving message
-	 * TODO: Turn on lamps on floor  
+	 *         TODO: Turn on lamps on floor
 	 */
 	public synchronized void sendToFloor() {
 		ElevatorData temp = elevators.get(0);
-		String dat = "arrived " + temp.getCurrentFloor();
-		byte[] toSend = dat.getBytes();
+		String dataString = "arrived " + temp.getCurrentFloor();
+		byte[] toSend = dataString.getBytes();
 		this.sendPacket = new DatagramPacket(toSend, toSend.length, addressFloor, portFloor);
 		try {
 			this.sendReceiveSocketFloor.send(this.sendPacket);
@@ -176,21 +181,20 @@ public class Scheduler {
 	 * @return sends the floor requested to the elevator
 	 */
 	public synchronized void sendToElevator() {
-		for(ElevatorData temp : elevators) {
+		for (ElevatorData temp : elevators) {
 			byte[] toSend = new byte[100];
 			// send the appropriate floor request based on the elevator
 			int t = checkSend(temp);
-			if(t == -1){
+			if (t == -1) {
 				String wait = "waiting";
 				toSend = wait.getBytes();
-			}
-			else{
+			} else {
 				String dat = t + " " + temp.getDirection();
 				toSend = dat.getBytes();
 			}
-	
+
 			this.sendPacket = new DatagramPacket(toSend, toSend.length, temp.getAddress(), temp.getPort());
-	
+
 			try {
 				this.sendReceiveSocketElevators.send(this.sendPacket);
 			} catch (IOException e) {
@@ -199,48 +203,164 @@ public class Scheduler {
 			}
 		}
 	}
-
+	
 	/**
-	 * Adds the floor to the right queue  
 	 * 
-	 * @param floor thats is the floor that need to be added to the queue
+	 * @param differenceMap
+	 * @param floor
+	 * @param down
 	 */
-	public synchronized void checkPriority(int floor) {
-		ElevatorData temp = elevators.get(0);
-
-		if (temp.getCurrentFloor() < floor) {
-			temp.addToUp(floor);
-			temp.sortArrays();
-		} else if (temp.getCurrentFloor() > floor) {
-			temp.addToDown(floor);
-			temp.sortArrays();
+	private void getElevatorFromDifference(HashMap<String,Integer> differenceMap,int floor,boolean down) {
+		int minDifference = Collections.min(differenceMap.values());
+		for(String currElevatorName : differenceMap.keySet()) {
+			if(differenceMap.get(currElevatorName).equals(minDifference)) {
+				for(ElevatorData e : elevators) {
+					if(e.getName().equals(currElevatorName)) {
+						if(down) {
+							e.addToDown(floor);
+						}else {
+							e.addToUp(floor);
+						}
+					}
+				}
+			}
 		}
 	}
 
+
 	/**
-	 * Check send basically organizes which QUEUE is going to the elevator first 
+	 * Adds the floor to the right queue
+	 * 
+	 * @param floor thats is the floor that need to be added to the queue
+	 */
+	public synchronized void checkPriority(int floor, String floorButtonDirection) {
+
+		HashMap<String, Integer> differenceUp = new HashMap<>();
+		HashMap<String, Integer> differenceDown = new HashMap<>();
+		HashMap<String, Integer> differenceStopped = new HashMap<>();
+
+		for (ElevatorData currElevator : elevators) {
+			// difference - used to calculate difference from the elevators current floor
+			// and the new floor request
+			int difference = currElevator.getCurrentFloor() - floor;
+			if (currElevator.getDirection().equals(Direction.DOWN)) {
+				if (difference > 0) {
+					differenceDown.put(currElevator.name, difference);
+//					downElevators.add(currElevator);
+				}
+			} else if (currElevator.getDirection().equals(Direction.UP)) {
+				if (difference < 0) {
+					differenceUp.put(currElevator.name, difference);
+//					upElevators.add(currElevator);
+				}
+			} else if (currElevator.getDirection().equals(Direction.STOPPED)) {
+				differenceStopped.put(currElevator.getName(), difference);
+//				stoppedElevators.add(currElevator);
+			} else {
+				// if direction is not correct
+
+			}
+
+		}
+
+		switch (floorButtonDirection) {
+																																			case "DOWN":
+			// when we have elevators going down
+			if (!differenceDown.isEmpty()) {
+				getElevatorFromDifference(differenceDown, floor, true);
+			} else if (!differenceStopped.isEmpty()) {
+				getElevatorFromDifference(differenceStopped, floor, true);
+
+			} else {
+				// Case where there are no elevators going down or stopped, so we assign the
+				// floor request to an
+				// elevator with the least amount of requests (ie. the size of their up and down
+				// queues)
+				ElevatorData minElevatorReq = elevators.get(0);
+				int minSum = minElevatorReq.getUpQueue().size() + minElevatorReq.getDownQueue().size();
+				for (ElevatorData e : elevators) {
+					int sumOfSizeQueues = e.getDownQueue().size() + e.getUpQueue().size();
+					if (sumOfSizeQueues < minSum) {
+						minElevatorReq = e;
+						minSum = sumOfSizeQueues;
+					}
+				}
+
+				for (ElevatorData e : elevators) {
+					if (minElevatorReq.getName().equals(e.getName())) {
+						e.addToDown(floor);
+					}
+				}
+				
+			}
+			break;
+			
+		case "UP":
+			// when we have elevators going down
+			if (!differenceUp.isEmpty()) {
+
+				getElevatorFromDifference(differenceUp, floor, false);
+			} else if (!differenceStopped.isEmpty()) {
+
+				getElevatorFromDifference(differenceStopped, floor, false);
+
+			} else {
+				// Case where there are no elevators going down or stopped, so we assign the
+				// floor request to an
+				// elevator with the least amount of requests (ie. the size of their up and down
+				// queues)
+				ElevatorData minElevatorReq = elevators.get(0);
+				int minSum = minElevatorReq.getUpQueue().size() + minElevatorReq.getDownQueue().size();
+				for (ElevatorData e : elevators) {
+					int sumOfSizeQueues = e.getDownQueue().size() + e.getUpQueue().size();
+					if (sumOfSizeQueues < minSum) {
+						minElevatorReq = e;
+						minSum = sumOfSizeQueues;
+					}
+				}
+
+				for (ElevatorData e : elevators) {
+					if (minElevatorReq.getName().equals(e.getName())) {
+						e.addToUp(floor);
+					}
+				}
+				
+
+			}
+			break;
+			
+		default:
+			break;
+		}
+
+	}
+
+	/**
+	 * Check send basically organizes which QUEUE is going to the elevator first
 	 * 
 	 * @return
 	 */
 	private synchronized int checkSend(ElevatorData elevator) {
 		int toVisit = -1;
-		// If up queue is empty and down queue is not empty, set the elevator direction to down
+		// If up queue is empty and down queue is not empty, set the elevator direction
+		// to down
 		if (elevator.getUpQueue().isEmpty() && !elevator.getDownQueue().isEmpty()) {
 			elevator.setDirection(Direction.DOWN);
 		}
-		// If up queue is not empty and down queue is empty, set the elevator direction to up
+		// If up queue is not empty and down queue is empty, set the elevator direction
+		// to up
 		else if (!elevator.getUpQueue().isEmpty() && elevator.getDownQueue().isEmpty()) {
 			elevator.setDirection(Direction.UP);
 		}
 
 		// If up queue is not empty or down queue is not empty
 		if (!elevator.getUpQueue().isEmpty() || !elevator.getDownQueue().isEmpty()) {
-			// If the elevator direction is up, get floor to visit from up queue 
+			// If the elevator direction is up, get floor to visit from up queue
 			if (elevator.getDirection() == Direction.UP) {
 				toVisit = (Integer) elevator.getUpQueue().get(0);
 				elevator.removeUp();
 			}
-			// If the elevator direction is up, get floor to visit from down queue 
+			// If the elevator direction is up, get floor to visit from down queue
 			else if (elevator.getDirection() == Direction.DOWN) {
 				toVisit = (Integer) elevator.getDownQueue().get(0);
 				elevator.removeDown();
@@ -262,27 +382,27 @@ public class Scheduler {
 	public boolean isEmptyElevator() {
 		return this.emptyElevator;
 	}
-	
+
 	public SchedulerStates getCurrentState1() {
 		return this.currentState1;
 	}
-	
+
 	public SchedulerStates getCurrentState2() {
 		return this.currentState2;
 	}
-	
+
 	public Direction getDirection() {
 		return this.direction;
 	}
-	
+
 	public int getFloorToVisit() {
 		return this.floorToVisit;
 	}
-	
+
 	public int getCurrentFloor() {
 		return this.currentFloor;
 	}
-	
+
 	public String getIsDataFromFloor() {
 		return this.isDataFromFloor;
 	}
@@ -291,7 +411,7 @@ public class Scheduler {
 	 * 
 	 * @param numOfElevators
 	 */
-	public void InitializePort(int numOfElevators){
+	public void InitializePort(int numOfElevators) {
 		byte[] data = new byte[100];
 		receivePacket = new DatagramPacket(data, data.length);
 		try {
@@ -303,7 +423,7 @@ public class Scheduler {
 		portFloor = receivePacket.getPort();
 		addressFloor = receivePacket.getAddress();
 
-		for(int x = 1; x == numOfElevators; x++){
+		for (int x = 1; x == numOfElevators; x++) {
 			data = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
 			try {
@@ -312,14 +432,15 @@ public class Scheduler {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength()) + " 1" ;
-			elevators.add(new ElevatorData(name, receivePacket.getPort(),receivePacket.getAddress(), 0));
+			String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength()) + " 1";
+			elevators.add(new ElevatorData(name, receivePacket.getPort(), receivePacket.getAddress(), 0));
 		}
 
 		System.out.println("Floor port is: " + portFloor + " and address is: " + addressFloor);
-		for(int z = 0; z < elevators.size(); z++){
+		for (int z = 0; z < elevators.size(); z++) {
 			ElevatorData temp = elevators.get(z);
-			System.out.println(temp.getName() + " port is: " + temp.getPort() + " and address is: " + temp.getAddress());
+			System.out
+					.println(temp.getName() + " port is: " + temp.getPort() + " and address is: " + temp.getAddress());
 		}
 	}
 
@@ -331,10 +452,10 @@ public class Scheduler {
 		return builder.toString();
 	}
 
-	public static void main(String[] args){
+	public static void main(String[] args) {
 		Scheduler scheduler = new Scheduler();
 		ReadPropertyFile r = new ReadPropertyFile();
-		
+
 		scheduler.InitializePort(r.getNumElevators());
 		scheduler.sendAndReceive();
 	}

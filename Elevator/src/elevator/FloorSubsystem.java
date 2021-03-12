@@ -172,6 +172,22 @@ public class FloorSubsystem implements Runnable {
 			}
 
 			if(wait.equals("waiting")){
+				byte[] data = new byte[100];
+				receivePacket = new DatagramPacket(data, data.length);
+				try {
+					sendReceiveSocket.receive(receivePacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				} // Receive data from Scheduler
+//				String temp2 = "";
+				String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+				String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
+				if (splitElevatorResponse[0].equals("arrived")) {
+					this.setLampsSensors(splitElevatorResponse[1]);
+//					temp2 = "go";
+				}
+				System.out.println("Floor received: " + toPrint);
 				System.out.println("Floor has nothing to send");
 				wait = "";
 			}
@@ -204,7 +220,7 @@ public class FloorSubsystem implements Runnable {
 				e.printStackTrace();
 				System.exit(1);
 			} // Receive data from Scheduler
-			String temp2 ="";
+			String temp2 = "";
 			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
 			if (splitElevatorResponse[0].equals("arrived")) {
