@@ -26,12 +26,14 @@ public class ElevatorSubsystem implements Runnable {
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
 	private String[] cut = new String[2];
+	private String name;
 
 	/**
      * Instantiates the variables  
      */
-	public ElevatorSubsystem() {
+	public ElevatorSubsystem(String name) {
 		//this.scheduler = scheduler;
+		this.name = name;
 		currentState = ElevatorStates.INITIAL_STATE;
 		motorState = Direction.STOPPED;
 		data = new FloorRequest();
@@ -66,8 +68,8 @@ public class ElevatorSubsystem implements Runnable {
 	 */
 	public void Initialize(){
 		byte[] toSend = new byte[100];
-		String name = "elevator";
-		toSend = name.getBytes();
+
+		toSend = this.name.getBytes();
 		try {
 			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
 		} catch (UnknownHostException e) {
@@ -126,7 +128,7 @@ public class ElevatorSubsystem implements Runnable {
 				System.exit(1);
 			} // Receive data from Scheduler
 			String dat = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
-			System.out.println("Elevator Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
+			System.out.println(this.name + " Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
 			if (dat.equals("waiting")) {
 				currentState = ElevatorStates.INITIAL_STATE;
 			} else {
@@ -170,7 +172,7 @@ public class ElevatorSubsystem implements Runnable {
 				System.exit(1);
 			}
 			//scheduler.receiveStateMachine(null, msg); // Send data from elevator to Scheduler
-			System.out.println("Elevator Sent: " + msg);
+			System.out.println(this.name + " Sent: " + msg);
 			currentState = ElevatorStates.INITIAL_STATE;
 			break;
 		}
@@ -181,14 +183,16 @@ public class ElevatorSubsystem implements Runnable {
      */
 	@Override
 	public void run() {
+		System.out.println(name + " started!");
+		Initialize();
 		while (true) {
 			this.stateMachine();
 
-			try {
+			/*try {
 				Thread.sleep(1500L);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}
+			}*/
 		}
 	}
 
@@ -235,12 +239,11 @@ public class ElevatorSubsystem implements Runnable {
 	 * @param args
 	 */
 	public static void main(String[] args){
-		ElevatorSubsystem elevator = new ElevatorSubsystem();
-		elevator.Initialize();
-		// TODO: get times from config file to user for timer events
-		// in the state machine - ask Nazifa for more clarification
-		while(true){
-			elevator.stateMachine();
-		}
+		Thread Elevator, Elevator2;
+		Elevator = new Thread(new ElevatorSubsystem("Elevator"), "Elevator");
+		Elevator2 = new Thread(new ElevatorSubsystem("Elevator Two"), "Elevator2");
+
+		Elevator.start();
+		Elevator2.start();
 	}
 }

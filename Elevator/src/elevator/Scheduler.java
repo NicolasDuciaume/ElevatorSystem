@@ -29,6 +29,8 @@ public class Scheduler {
 	private ArrayList<ElevatorData> elevators;
 	private int waiting = 0;
 	private int elevatorBeingUsed = 0;
+	private int maxElevator = 0;
+	private int count = 0;
 
 	/**
 	 * Enum for the states
@@ -64,12 +66,28 @@ public class Scheduler {
 
 	}
 
+	private void elevatorChange(){
+		System.out.println(elevatorBeingUsed);
+		if(elevatorBeingUsed == maxElevator){
+			elevatorBeingUsed = 0;
+		}
+		else{
+			elevatorBeingUsed++;
+		}
+		System.out.println(elevatorBeingUsed);
+	}
+
 	private void sendAndReceive() {
 		byte[] data = new byte[100];
 		receivePacket = new DatagramPacket(data, data.length);
 		while (true) {
+			if(count == 2){
+				elevatorChange();
+				count = 0;
+			}
 			this.receiveStateMachine(data);
 			this.sendStateMachine();
+			//elevatorChange();
 		}
 	}
 
@@ -79,7 +97,7 @@ public class Scheduler {
 	 * @return
 	 */
 	public void sendStateMachine() {
-
+		//elevatorChange();
 		switch (currentState1) {
 		case STATE_1:
 			sendToElevator();
@@ -88,6 +106,7 @@ public class Scheduler {
 		case STATE_2:
 			sendToFloor();
 			currentState1 = SchedulerStates.STATE_1;
+			count++;
 			break;
 		}
 		return;
@@ -139,7 +158,7 @@ public class Scheduler {
 	 *             a button press
 	 */
 	public synchronized void receiveFromElevator(byte[] data) {
-		ElevatorData temp = elevators.get(0);
+		ElevatorData temp = elevators.get(elevatorBeingUsed);
 		try {
 			sendReceiveSocketElevators.receive(receivePacket);
 		} catch (IOException e) {
@@ -161,6 +180,7 @@ public class Scheduler {
 				temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[1]));
 			}
 		}
+		//elevatorChange();
 
 	}
 
@@ -171,15 +191,15 @@ public class Scheduler {
 	 *         TODO: Turn on lamps on floor
 	 */
 	public synchronized void sendToFloor() {
-		ElevatorData temp = elevators.get(0);
+		ElevatorData temp = elevators.get(elevatorBeingUsed);
 		byte[] toSend = new byte[100];
 		if(waiting == elevators.size()){
 			String dataString = "waiting";
 			toSend = dataString.getBytes();
 		}
 		else {
-			String dataString = "arrived " + temp.getCurrentFloor();
-			toSend = dataString.getBytes();
+		String dataString = "arrived " + temp.getCurrentFloor();
+		toSend = dataString.getBytes();
 		}
 		this.sendPacket = new DatagramPacket(toSend, toSend.length, addressFloor, portFloor);
 		try {
@@ -188,33 +208,35 @@ public class Scheduler {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		//elevatorChange();
 	}
 
 	/**
 	 * @return sends the floor requested to the elevator
 	 */
 	public synchronized void sendToElevator() {
-		for (ElevatorData temp : elevators) {
-			byte[] toSend = new byte[100];
-			// send the appropriate floor request based on the elevator
-			int t = checkSend(temp);
-			if (t == -1) {
-				String wait = "waiting";
-				toSend = wait.getBytes();
-			} else {
-				String dat = t + " " + temp.getDirection();
-				toSend = dat.getBytes();
-			}
-
-			this.sendPacket = new DatagramPacket(toSend, toSend.length, temp.getAddress(), temp.getPort());
-
-			try {
-				this.sendReceiveSocketElevators.send(this.sendPacket);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
+		ElevatorData temp = elevators.get(elevatorBeingUsed);
+		byte[] toSend = new byte[100];
+		// send the appropriate floor request based on the elevator
+		int t = checkSend(temp);
+		if (t == -1) {
+			String wait = "waiting";
+			toSend = wait.getBytes();
+		} else {
+			String dat = t + " " + temp.getDirection();
+			toSend = dat.getBytes();
 		}
+
+		this.sendPacket = new DatagramPacket(toSend, toSend.length, temp.getAddress(), temp.getPort());
+
+		try {
+			this.sendReceiveSocketElevators.send(this.sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		//elevatorChange();
+
 	}
 	
 	/**
@@ -289,7 +311,7 @@ public class Scheduler {
 				// floor request to an
 				// elevator with the least amount of requests (ie. the size of their up and down
 				// queues)
-				ElevatorData minElevatorReq = elevators.get(0);
+				ElevatorData minElevatorReq = elevators.get(elevatorBeingUsed);
 				int minSum = minElevatorReq.getUpQueue().size() + minElevatorReq.getDownQueue().size();
 				for (ElevatorData e : elevators) {
 					int sumOfSizeQueues = e.getDownQueue().size() + e.getUpQueue().size();
@@ -425,6 +447,10 @@ public class Scheduler {
 	 * @param numOfElevators
 	 */
 	public void InitializePort(int numOfElevators) {
+		maxElevator = numOfElevators;
+		maxElevator--;
+		System.out.println(maxElevator);
+		System.out.println(elevatorBeingUsed);
 		byte[] data = new byte[100];
 		receivePacket = new DatagramPacket(data, data.length);
 		try {
@@ -436,7 +462,7 @@ public class Scheduler {
 		portFloor = receivePacket.getPort();
 		addressFloor = receivePacket.getAddress();
 
-		for (int x = 1; x == numOfElevators; x++) {
+		while(elevators.size() != numOfElevators){
 			data = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
 			try {
@@ -445,9 +471,13 @@ public class Scheduler {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength()) + " 1";
+			String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			elevators.add(new ElevatorData(name, receivePacket.getPort(), receivePacket.getAddress(), 0));
+			if(elevators.size() == numOfElevators){
+				break;
+			}
 		}
+
 
 		System.out.println("Floor port is: " + portFloor + " and address is: " + addressFloor);
 		for (int z = 0; z < elevators.size(); z++) {
@@ -469,7 +499,7 @@ public class Scheduler {
 		Scheduler scheduler = new Scheduler();
 		ReadPropertyFile r = new ReadPropertyFile();
 
-		scheduler.InitializePort(r.getNumElevators());
+		scheduler.InitializePort(2);
 		scheduler.sendAndReceive();
 	}
 }
