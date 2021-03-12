@@ -187,27 +187,28 @@ public class Scheduler {
 	 * @return sends the floor requested to the elevator
 	 */
 	public synchronized void sendToElevator() {
-		ElevatorData temp = elevators.get(0);
-		byte[] toSend = new byte[100];
-		int t = checkSend(temp); // send the appropriate floor request based on the elevator
-		if(t == -1){
-			String wait = "waiting";
-			toSend = wait.getBytes();
+//		ElevatorData temp = elevators.get(0);
+		for(ElevatorData temp : elevators) {
+			byte[] toSend = new byte[100];
+			int t = checkSend(temp); // send the appropriate floor request based on the elevator
+			if(t == -1){
+				String wait = "waiting";
+				toSend = wait.getBytes();
+			}
+			else{
+				String dat = t + " " + temp.getDirection();
+				toSend = dat.getBytes();
+			}
+	
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, temp.getAddress(), temp.getPort());
+	
+			try {
+				this.sendReceiveSocketElevators.send(this.sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 		}
-		else{
-			String dat = t + " " + temp.getDirection();
-			toSend = dat.getBytes();
-		}
-
-		this.sendPacket = new DatagramPacket(toSend, toSend.length, temp.getAddress(), temp.getPort());
-
-		try {
-			this.sendReceiveSocketElevators.send(this.sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
 	}
 
 	/**
@@ -332,7 +333,9 @@ public class Scheduler {
 
 	public static void main(String[] args){
 		Scheduler scheduler = new Scheduler();
-		scheduler.InitializePort(1);
+		ReadPropertyFile r = new ReadPropertyFile();
+		
+		scheduler.InitializePort(r.getNumElevators());
 		scheduler.sendAndReceive();
 	}
 }

@@ -61,6 +61,9 @@ public class ElevatorSubsystem implements Runnable {
 		directionLamp = Direction.STOPPED;
 	}
 
+	/**
+	 * Init packet and socket for elevator
+	 */
 	public void Initialize(){
 		byte[] toSend = new byte[100];
 		String name = "elevator";
@@ -226,9 +229,16 @@ public class ElevatorSubsystem implements Runnable {
 		private ElevatorStates() {
 		}
 	}
+	
+	/**
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args){
 		ElevatorSubsystem elevator = new ElevatorSubsystem();
 		elevator.Initialize();
+		// TODO: get times from config file to user for timer events
+		// in the state machine - ask Nazifa for more clarification
 		while(true){
 			elevator.stateMachine();
 		}
