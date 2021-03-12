@@ -27,6 +27,8 @@ public class Scheduler {
 	private DatagramSocket sendReceiveSocketFloor, sendReceiveSocketElevators;
 	private InetAddress addressFloor;
 	private ArrayList<ElevatorData> elevators;
+	private int waiting = 0;
+	private int elevatorBeingUsed = 0;
 
 	/**
 	 * Enum for the states
@@ -149,7 +151,11 @@ public class Scheduler {
 		// Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = name.split(" ");
 		if (!splitElevatorMsg[0].equals("arrived")) { // if button pressed
-			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]), null);
+			if(!splitElevatorMsg[0].equals("waiting")){
+			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]), null);}
+			else {
+				waiting++;
+			}
 		} else { // if arrived to floor
 			if (splitElevatorMsg[0].equals("arrived")) {
 				temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[1]));
@@ -166,8 +172,15 @@ public class Scheduler {
 	 */
 	public synchronized void sendToFloor() {
 		ElevatorData temp = elevators.get(0);
-		String dataString = "arrived " + temp.getCurrentFloor();
-		byte[] toSend = dataString.getBytes();
+		byte[] toSend = new byte[100];
+		if(waiting == elevators.size()){
+			String dataString = "waiting";
+			toSend = dataString.getBytes();
+		}
+		else {
+			String dataString = "arrived " + temp.getCurrentFloor();
+			toSend = dataString.getBytes();
+		}
 		this.sendPacket = new DatagramPacket(toSend, toSend.length, addressFloor, portFloor);
 		try {
 			this.sendReceiveSocketFloor.send(this.sendPacket);

@@ -26,6 +26,7 @@ public class FloorSubsystem implements Runnable {
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
 	private String wait = "waiting";
+	private int lastRequest;
 
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
@@ -37,6 +38,8 @@ public class FloorSubsystem implements Runnable {
 		//this.scheduler = scheduler;
 		this.listofRequests = new ArrayList<FloorRequest>();
 		this.addFloorRequest(FileLocation);
+		FloorRequest f = listofRequests.get(listofRequests.size() - 1);
+		this.lastRequest = f.getFloorDestination();
 		try {
 			sendReceiveSocket = new DatagramSocket();
 		} catch (SocketException se) {
@@ -243,6 +246,24 @@ public class FloorSubsystem implements Runnable {
 				System.exit(1);
 			}
 			System.out.println("Floor Sent: " + temp2);
+
+			data = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+			try {
+				sendReceiveSocket.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} // Receive data from Scheduler
+			temp2 = "";
+			toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+			splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
+			if (splitElevatorResponse[0].equals("arrived")) {
+				this.setLampsSensors(splitElevatorResponse[1]);
+				temp2 = "go";
+			}
+			System.out.println("Floor received: " + toPrint);
+
 			listofRequests.remove(0);
 		}
 	}
