@@ -2,13 +2,11 @@ package elevator;
 
 import java.io.IOException;
 import java.net.*;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * 
- * Schedular handles communication between Elevator and Floors using a state machine
+ * Scheduler handles communication between Elevator and Floors using a state machine
  * 
  * @author Tooba Sheikh      101028915
  * @author Jameel Alidina    101077040
@@ -17,20 +15,13 @@ import java.util.Collections;
  */
 public class Scheduler {
 
-	private ArrayList<Integer> upQueue;
-	private ArrayList<Integer> downQueue;
-	private int currentFloor;
 	public Direction direction;
-	private String[] processed;
-	private String isDataFromFloor;
-	private String dataFromElevator;
-	private int floorToVisit;
-	private boolean emptyFloor;
-	private boolean emptyElevator;
+	private String isDataFromFloor, dataFromElevator;
+	private int floorToVisit, portFloor, currentFloor;
+	private boolean emptyFloor, emptyElevator;
 	private SchedulerStates currentState1, currentState2;
 	private DatagramPacket receivePacket, sendPacket;
 	private DatagramSocket sendReceiveSocketFloor, sendReceiveSocketElevators;
-	private int portFloor;
 	private InetAddress addressFloor;
 	private ArrayList<ElevatorData> elevators;
 
@@ -46,8 +37,6 @@ public class Scheduler {
 	 * Initializes all the variables
 	 */
 	public Scheduler() {
-		upQueue = new ArrayList<Integer>();
-		downQueue = new ArrayList<Integer>();
 		currentFloor = 1;
 		isDataFromFloor = "";
 		dataFromElevator = "";
@@ -138,7 +127,7 @@ public class Scheduler {
 	}
 
 	/**
-	 * receives data from the elevator
+	 * Receives data from the elevator
 	 * 
 	 * @param data the info received from the elevator, either an arrival message or a button press 
 	 */
@@ -187,10 +176,10 @@ public class Scheduler {
 	 * @return sends the floor requested to the elevator
 	 */
 	public synchronized void sendToElevator() {
-//		ElevatorData temp = elevators.get(0);
 		for(ElevatorData temp : elevators) {
 			byte[] toSend = new byte[100];
-			int t = checkSend(temp); // send the appropriate floor request based on the elevator
+			// send the appropriate floor request based on the elevator
+			int t = checkSend(temp);
 			if(t == -1){
 				String wait = "waiting";
 				toSend = wait.getBytes();
@@ -235,17 +224,24 @@ public class Scheduler {
 	 */
 	private synchronized int checkSend(ElevatorData elevator) {
 		int toVisit = -1;
+		// If up queue is empty and down queue is not empty, set the elevator direction to down
 		if (elevator.getUpQueue().isEmpty() && !elevator.getDownQueue().isEmpty()) {
 			elevator.setDirection(Direction.DOWN);
-		} else if (!elevator.getUpQueue().isEmpty() && this.downQueue.isEmpty()) {
+		}
+		// If up queue is not empty and down queue is empty, set the elevator direction to up
+		else if (!elevator.getUpQueue().isEmpty() && elevator.getDownQueue().isEmpty()) {
 			elevator.setDirection(Direction.UP);
 		}
 
+		// If up queue is not empty or down queue is not empty
 		if (!elevator.getUpQueue().isEmpty() || !elevator.getDownQueue().isEmpty()) {
+			// If the elevator direction is up, get floor to visit from up queue 
 			if (elevator.getDirection() == Direction.UP) {
 				toVisit = (Integer) elevator.getUpQueue().get(0);
 				elevator.removeUp();
-			} else if (elevator.getDirection() == Direction.DOWN) {
+			}
+			// If the elevator direction is up, get floor to visit from down queue 
+			else if (elevator.getDirection() == Direction.DOWN) {
 				toVisit = (Integer) elevator.getDownQueue().get(0);
 				elevator.removeDown();
 			}
@@ -291,6 +287,10 @@ public class Scheduler {
 		return this.isDataFromFloor;
 	}
 
+	/**
+	 * 
+	 * @param numOfElevators
+	 */
 	public void InitializePort(int numOfElevators){
 		byte[] data = new byte[100];
 		receivePacket = new DatagramPacket(data, data.length);
