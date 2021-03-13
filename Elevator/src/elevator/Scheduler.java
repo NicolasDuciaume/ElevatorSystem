@@ -146,8 +146,8 @@ public class Scheduler {
 		String[] cut = name.split(" ");
 		if (!cut[0].equals("go")) {
 			// TODO: Need to figure out the direction to go to the floor where we pick up people
-			checkPriority(Integer.parseInt(cut[1]), cut[2]);
-			checkPriority(Integer.parseInt(cut[3]), cut[2]);
+			checkPriority(Integer.parseInt(cut[1]), cut[2], Integer.parseInt(cut[3]));
+			//checkPriority(Integer.parseInt(cut[3]), cut[2]);
 			System.out.println(name);
 		}
 	}
@@ -170,17 +170,28 @@ public class Scheduler {
 
 		// Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = name.split("-");
-		if (!splitElevatorMsg[0].equals("arrived")) { // if button pressed
-			if(!splitElevatorMsg[0].equals("waiting")){
-			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]), null);}
+		if (!splitElevatorMsg[1].equals("arrived")) { // if button pressed
+			if(!splitElevatorMsg[1].equals("waiting")){
+			this.checkPriority(-1, null,Integer.parseInt(splitElevatorMsg[0]));}
 			else {
 				waiting++;
-				mess = mess + " waiting" ;
+				if(mess.equals("")){
+					mess = mess + splitElevatorMsg[0] + "-waiting" ;
+				}
+				else {
+					mess = mess + " " + splitElevatorMsg[0] + "-waiting" ;
+					waiting--;
+				}
 			}
 		} else { // if arrived to floor
-			temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[1]));
-			mess = mess + " " + name;
-			waiting--;
+			temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[2]));
+			if(mess.equals("")){
+				mess = mess + name;
+			}
+			else {
+				mess = mess + " " + name;
+				waiting--;
+			}
 		}
 		elevatorChange();
 
@@ -197,6 +208,7 @@ public class Scheduler {
 		if(waiting == elevators.size()){
 			String dataString = "waiting";
 			toSend = dataString.getBytes();
+			mess = "";
 		}
 		else {
 		String dataString = mess;
@@ -246,7 +258,7 @@ public class Scheduler {
 	 * @param floor
 	 * @param down
 	 */
-	private void getElevatorFromDifference(HashMap<String,Integer> differenceMap,int floor,boolean down) {
+	private void getElevatorFromDifference(HashMap<String,Integer> differenceMap,int floor,boolean down,int floor2, String dir) {
 		int minDifference = Collections.min(differenceMap.values());
 		for(String currElevatorName : differenceMap.keySet()) {
 			if(differenceMap.get(currElevatorName).equals(minDifference)) {
@@ -254,8 +266,22 @@ public class Scheduler {
 					if(e.getName().equals(currElevatorName)) {
 						if(down) {
 							e.addToDown(floor);
+							if(dir.equals("UP")){
+								e.addToUp(floor2);
+							}
+							else{
+								e.addToDown(floor2);
+							}
+							break;
 						}else {
 							e.addToUp(floor);
+							if(dir.equals("UP")){
+								e.addToUp(floor2);
+							}
+							else{
+								e.addToDown(floor2);
+							}
+							break;
 						}
 					}
 				}
@@ -267,18 +293,20 @@ public class Scheduler {
 	/**
 	 * Adds the floor to the right queue
 	 * 
-	 * @param floor thats is the floor that need to be added to the queue
+	 * @param origin thats is the floor that need to be added to the queue
 	 */
-	public synchronized void checkPriority(int floor, String floorButtonDirection) {
+	public synchronized void checkPriority(int origin, String floorButtonDirection, int floor) {
 
 		HashMap<String, Integer> differenceUp = new HashMap<>();
 		HashMap<String, Integer> differenceDown = new HashMap<>();
 		HashMap<String, Integer> differenceStopped = new HashMap<>();
 
+
+
 		for (ElevatorData currElevator : elevators) {
 			// difference - used to calculate difference from the elevators current floor
 			// and the new floor request
-			int difference = currElevator.getCurrentFloor() - floor;
+			int difference = currElevator.getCurrentFloor() - origin;
 			if (currElevator.getDirection().equals(Direction.DOWN)) {
 				if (difference > 0) {
 					differenceDown.put(currElevator.name, difference);
@@ -300,12 +328,12 @@ public class Scheduler {
 		}
 
 		switch (floorButtonDirection) {
-																																			case "DOWN":
+			case "DOWN":
 			// when we have elevators going down
 			if (!differenceDown.isEmpty()) {
-				getElevatorFromDifference(differenceDown, floor, true);
+				getElevatorFromDifference(differenceDown, origin, true,floor, floorButtonDirection);
 			} else if (!differenceStopped.isEmpty()) {
-				getElevatorFromDifference(differenceStopped, floor, true);
+				getElevatorFromDifference(differenceStopped, origin, true,floor, floorButtonDirection);
 
 			} else {
 				// Case where there are no elevators going down or stopped, so we assign the
@@ -324,7 +352,9 @@ public class Scheduler {
 
 				for (ElevatorData e : elevators) {
 					if (minElevatorReq.getName().equals(e.getName())) {
+						e.addToDown(origin);
 						e.addToDown(floor);
+						break;
 					}
 				}
 				
@@ -335,17 +365,17 @@ public class Scheduler {
 			// when we have elevators going down
 			if (!differenceUp.isEmpty()) {
 
-				getElevatorFromDifference(differenceUp, floor, false);
+				getElevatorFromDifference(differenceUp, origin, false , floor , floorButtonDirection);
 			} else if (!differenceStopped.isEmpty()) {
 
-				getElevatorFromDifference(differenceStopped, floor, false);
+				getElevatorFromDifference(differenceStopped, origin, false, floor, floorButtonDirection);
 
 			} else {
 				// Case where there are no elevators going down or stopped, so we assign the
 				// floor request to an
 				// elevator with the least amount of requests (ie. the size of their up and down
 				// queues)
-				ElevatorData minElevatorReq = elevators.get(0);
+				ElevatorData minElevatorReq = elevators.get(elevatorBeingUsed);
 				int minSum = minElevatorReq.getUpQueue().size() + minElevatorReq.getDownQueue().size();
 				for (ElevatorData e : elevators) {
 					int sumOfSizeQueues = e.getDownQueue().size() + e.getUpQueue().size();
@@ -357,7 +387,9 @@ public class Scheduler {
 
 				for (ElevatorData e : elevators) {
 					if (minElevatorReq.getName().equals(e.getName())) {
+						e.addToUp(origin);
 						e.addToUp(floor);
+						break;
 					}
 				}
 				

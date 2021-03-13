@@ -131,7 +131,8 @@ public class ElevatorSubsystem implements Runnable {
 			System.out.println(this.name + " Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
 			if (dat.equals("waiting")) {
 				currentState = ElevatorStates.INITIAL_STATE;
-				byte[] toSend = dat.getBytes();
+				String s = name+"-"+dat;
+				byte[] toSend = s.getBytes();
 				try {
 					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
 				} catch (UnknownHostException e) {
@@ -170,7 +171,7 @@ public class ElevatorSubsystem implements Runnable {
 			doorOpen = true;
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
-			String msg = "arrived-" + this.cut[0];
+			String msg = name+"-arrived-" + this.cut[0];
 			byte[] toSend = msg.getBytes();
 			try {
 				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
@@ -254,8 +255,8 @@ public class ElevatorSubsystem implements Runnable {
 	 */
 	public static void main(String[] args){
 		Thread Elevator, Elevator2;
-		Elevator = new Thread(new ElevatorSubsystem("Elevator"), "Elevator");
-		Elevator2 = new Thread(new ElevatorSubsystem("Elevator Two"), "Elevator2");
+		Elevator = new Thread(new ElevatorSubsystem("Elevator1"), "Elevator");
+		Elevator2 = new Thread(new ElevatorSubsystem("Elevator2"), "Elevator2");
 
 		Elevator.start();
 		Elevator2.start();

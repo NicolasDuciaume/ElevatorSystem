@@ -197,8 +197,8 @@ public class FloorSubsystem implements Runnable {
 //				String temp2 = "";
 				String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 				String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-				if (splitElevatorResponse[0].equals("arrived")) {
-					this.setLampsSensors(splitElevatorResponse[1]);
+				if (splitElevatorResponse[1].equals("arrived")) {
+					this.setLampsSensors(splitElevatorResponse[2]);
 //					temp2 = "go";
 				}
 				System.out.println("Floor received: " + toPrint);
@@ -237,11 +237,13 @@ public class FloorSubsystem implements Runnable {
 			String temp2 = "";
 			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
+
 			for(int x = 0; x < numOfElevators; x++){
 				String t = splitElevatorResponse[x];
+				//System.out.println(t);
 				String[] individualElevator = t.split("-");
-				if (individualElevator[0].equals("arrived")) {
-					this.setLampsSensors(individualElevator[1]);
+				if (individualElevator[1].equals("arrived")) {
+					this.setLampsSensors(individualElevator[2]);
 					temp2 = "go";
 				}
 			}
@@ -250,7 +252,9 @@ public class FloorSubsystem implements Runnable {
 
 			boolean elevatorWait = true;
 			for(int x = 0; x < numOfElevators; x++){
-				if(splitElevatorResponse[x].equals("waiting")){
+				String t = splitElevatorResponse[x];
+				String[] individualElevator = t.split("-");
+				if(individualElevator[1].equals("waiting")){
 					elevatorWait = false;
 				}
 			}
@@ -283,19 +287,21 @@ public class FloorSubsystem implements Runnable {
 				temp2 = "";
 				toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 				splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-				System.out.println(toPrint);
+				//System.out.println(toPrint);
 				for (int x = 0; x < splitElevatorResponse.length; x++) {
 					String t = splitElevatorResponse[x];
 					String[] individualElevator = t.split("-");
-					if (individualElevator[0].equals("arrived")) {
-						this.setLampsSensors(individualElevator[1]);
+					if (individualElevator[1].equals("arrived")) {
+						this.setLampsSensors(individualElevator[2]);
 						temp2 = "go";
 					}
 				}
 
 				elevatorWait = true;
 				for(int x = 0; x < numOfElevators; x++){
-					if(splitElevatorResponse[x].equals("waiting")){
+					String t = splitElevatorResponse[x];
+					String[] individualElevator = t.split("-");
+					if(individualElevator[1].equals("waiting")){
 						elevatorWait = false;
 					}
 				}
