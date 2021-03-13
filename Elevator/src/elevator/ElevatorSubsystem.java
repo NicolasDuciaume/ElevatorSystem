@@ -131,6 +131,20 @@ public class ElevatorSubsystem implements Runnable {
 			System.out.println(this.name + " Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
 			if (dat.equals("waiting")) {
 				currentState = ElevatorStates.INITIAL_STATE;
+				byte[] toSend = dat.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
 			} else {
 				currentState = ElevatorStates.STATE_1;
 			}
@@ -156,7 +170,7 @@ public class ElevatorSubsystem implements Runnable {
 			doorOpen = true;
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
-			String msg = "arrived " + this.cut[0];
+			String msg = "arrived-" + this.cut[0];
 			byte[] toSend = msg.getBytes();
 			try {
 				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
@@ -188,11 +202,11 @@ public class ElevatorSubsystem implements Runnable {
 		while (true) {
 			this.stateMachine();
 
-			/*try {
+			try {
 				Thread.sleep(1500L);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}*/
+			}
 		}
 	}
 

@@ -27,6 +27,7 @@ public class FloorSubsystem implements Runnable {
 	private DatagramSocket sendReceiveSocket;
 	private String wait = "waiting";
 	private int lastRequest;
+	private int numOfElevators = 0;
 
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
@@ -64,6 +65,16 @@ public class FloorSubsystem implements Runnable {
 			System.exit(1);
 		}
 
+		byte[] data = new byte[100];
+		receivePacket = new DatagramPacket(data, data.length);
+		try {
+			sendReceiveSocket.receive(receivePacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+		numOfElevators = Integer.parseInt(toPrint);
 	}
 
 	private static String toString(byte[] temp) {
@@ -226,10 +237,15 @@ public class FloorSubsystem implements Runnable {
 			String temp2 = "";
 			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-			if (splitElevatorResponse[0].equals("arrived")) {
-				this.setLampsSensors(splitElevatorResponse[1]);
-				temp2 = "go";
+			for(int x = 0; x < numOfElevators; x++){
+				String t = splitElevatorResponse[x];
+				String[] individualElevator = t.split("-");
+				if (individualElevator[0].equals("arrived")) {
+					this.setLampsSensors(individualElevator[1]);
+					temp2 = "go";
+				}
 			}
+
 			System.out.println("Floor received: " + toPrint);
 			byte[] toSend2 = temp2.getBytes();
 			try {
@@ -258,9 +274,14 @@ public class FloorSubsystem implements Runnable {
 			temp2 = "";
 			toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-			if (splitElevatorResponse[0].equals("arrived")) {
-				this.setLampsSensors(splitElevatorResponse[1]);
-				temp2 = "go";
+			System.out.println(toPrint);
+			for(int x = 0; x < splitElevatorResponse.length; x++){
+				String t = splitElevatorResponse[x];
+				String[] individualElevator = t.split("-");
+				if (individualElevator[0].equals("arrived")) {
+					this.setLampsSensors(individualElevator[1]);
+					temp2 = "go";
+				}
 			}
 			System.out.println("Floor received: " + toPrint);
 
