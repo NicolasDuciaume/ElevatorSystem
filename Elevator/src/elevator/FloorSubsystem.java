@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.net.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Scanner; //Import this class to accept input
 
 /**
@@ -200,16 +198,6 @@ public class FloorSubsystem implements Runnable {
 //				String temp2 = "";
 				String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 				String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-				
-				Arrays.sort(splitElevatorResponse);
-				
-				/*	String[] splitR = {};
-				for(int i = 0; i < splitElevatorResponse.length; i++) {
-					splitR = splitElevatorResponse[1].split("-");
-				}
-				Arrays.sort(splitR);
-				Arrays.sort(splitElevatorResponse);
-				*/
 				if (splitElevatorResponse[1].equals("arrived")) {
 					this.setLampsSensors(splitElevatorResponse[2]);
 //					temp2 = "go";
@@ -250,20 +238,32 @@ public class FloorSubsystem implements Runnable {
 			String temp2 = "";
 			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-			
-			Arrays.sort(splitElevatorResponse);
-			
+
+			String[] pp = new String[numOfElevators];
 			for(int x = 0; x < numOfElevators; x++){
 				String t = splitElevatorResponse[x];
 				//System.out.println(t);
 				String[] individualElevator = t.split("-");
+				pp[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1)) - 1] = t;
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2]);
 					temp2 = "go";
 				}
 			}
 
-			System.out.println("Floor received: " + toPrint);
+			String print = "";
+
+			for(String p : pp){
+				if(print.equals("")){
+					print = p;
+				}
+				else
+				{
+					print = print + " " + p;
+				}
+			}
+
+			System.out.println("Floor received: " + print);
 
 			boolean elevatorWait = true;
 			for(int x = 0; x < numOfElevators; x++){
@@ -300,18 +300,28 @@ public class FloorSubsystem implements Runnable {
 					System.exit(1);
 				} // Receive data from Scheduler
 				temp2 = "";
-			toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+				toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 				splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
 				//System.out.println(toPrint);
-				
-				Arrays.sort(splitElevatorResponse);
-				
 				for (int x = 0; x < splitElevatorResponse.length; x++) {
 					String t = splitElevatorResponse[x];
 					String[] individualElevator = t.split("-");
+					pp[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1)) - 1] = t;
 					if (individualElevator[1].equals("arrived")) {
 						this.setLampsSensors(individualElevator[2]);
 						temp2 = "go";
+					}
+				}
+
+				print = "";
+
+				for(String p : pp){
+					if(print.equals("")){
+						print = p;
+					}
+					else
+					{
+						print = print + " " + p;
 					}
 				}
 
