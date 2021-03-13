@@ -287,6 +287,7 @@ public class Scheduler {
 						}
 					}
 				}
+				break;
 			}
 		}
 	}
@@ -297,7 +298,7 @@ public class Scheduler {
 	 * 
 	 * @param origin thats is the floor that need to be added to the queue
 	 */
-	public synchronized void checkPriority(int origin, String floorButtonDirection, int floor) {
+	private synchronized void checkPriority(int origin, String floorButtonDirection, int floor) {
 
 		HashMap<String, Integer> differenceUp = new HashMap<>();
 		HashMap<String, Integer> differenceDown = new HashMap<>();
@@ -481,7 +482,7 @@ public class Scheduler {
 	 * 
 	 * @param numOfElevators
 	 */
-	public void InitializePort(int numOfElevators) {
+	private void InitializePort(int numOfElevators) {
 		maxElevator = numOfElevators;
 		maxElevator--;
 		System.out.println(maxElevator);
@@ -546,7 +547,7 @@ public class Scheduler {
 		Scheduler scheduler = new Scheduler();
 		ReadPropertyFile r = new ReadPropertyFile();
 
-		scheduler.InitializePort(2);
+		scheduler.InitializePort(r.getNumElevators());
 		scheduler.sendAndReceive();
 	}
 }

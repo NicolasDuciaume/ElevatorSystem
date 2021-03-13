@@ -27,7 +27,8 @@ public class ElevatorSubsystem implements Runnable {
 	private DatagramSocket sendReceiveSocket;
 	private String[] cut = new String[2];
 	private String name;
-
+	private static int countWaiting = 0;
+	
 	/**
      * Instantiates the variables  
      */
@@ -40,6 +41,7 @@ public class ElevatorSubsystem implements Runnable {
 		doorOpen = true;
 		floorRequests = new PriorityQueue<FloorRequest>();
 		elevatorLamps = new boolean[8];
+
 		try {
 			sendReceiveSocket = new DatagramSocket();
 		} catch (SocketException se) {
@@ -146,8 +148,13 @@ public class ElevatorSubsystem implements Runnable {
 					e.printStackTrace();
 					System.exit(1);
 				}
-			} else {
+				countWaiting++;
+				if(countWaiting >= 10)
+					System.exit(0); 
+			}
+			else {
 				currentState = ElevatorStates.STATE_1;
+				countWaiting = 0;
 			}
 			break;
 		case STATE_1: //doors close
@@ -254,12 +261,14 @@ public class ElevatorSubsystem implements Runnable {
 	 * @param args
 	 */
 	public static void main(String[] args){
-		Thread Elevator, Elevator2;
-		Elevator = new Thread(new ElevatorSubsystem("Elevator1"), "Elevator");
-		Elevator2 = new Thread(new ElevatorSubsystem("Elevator2"), "Elevator2");
-
-
-		Elevator.start();
-		Elevator2.start();
+		
+		ReadPropertyFile r = new ReadPropertyFile();
+		
+		Thread elevatorThreads[] = new Thread[r.getNumElevators()];  
+		
+		for(int i = 0; i < r.getNumElevators(); i++) {
+			elevatorThreads[i]= new Thread(new ElevatorSubsystem("Elevator" + (i+1)), "Elevator" + (i+1));
+			elevatorThreads[i].start();
+		}
 	}
 }
