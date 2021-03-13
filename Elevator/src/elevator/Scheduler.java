@@ -175,6 +175,7 @@ public class Scheduler {
 			this.checkPriority(Integer.parseInt(splitElevatorMsg[0]), null);}
 			else {
 				waiting++;
+				mess = mess + " waiting" ;
 			}
 		} else { // if arrived to floor
 			temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[1]));
