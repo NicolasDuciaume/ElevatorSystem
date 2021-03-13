@@ -97,20 +97,20 @@ public class ElevatorSubsystem implements Runnable {
 	 * @param type Used to identify whether the elevator needs directions or need
 	 *             the floor lamps.
 	 */
-	public void parseData(String x, String type) {
+	private void parseData(String direction, String type) {
 		// TODO: Check if data being parsed is from user or scheduler
 		// TODO: If there is a request while elevator is moving to a targeted floor
 		// direction will have to be adjusted depending on the request
 		if (type.equals("Direction")) {
-			if (x.equals("UP")) {
+			if (direction.equals("UP")) {
 				motorState = Direction.UP;
-			} else if (x.equals("DOWN")) {
+			} else if (direction.equals("DOWN")) {
 				motorState = Direction.DOWN;
 			}
 		}
 
 		if (type.equals("Floor Number")) {
-			this.elevatorLamps[Integer.parseInt(x) - 1] = true;
+			this.elevatorLamps[Integer.parseInt(direction) - 1] = true;
 		}
 
 	}

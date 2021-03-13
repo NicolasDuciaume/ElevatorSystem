@@ -34,13 +34,13 @@ public class SchedulerTest extends TestCase {
 		
 		// receive state machine should start in STATE_2 i.e. sending to elevator first
 		assertEquals(scheduler.getCurrentState1().toString(), "STATE_1");
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		assertEquals(scheduler.getDataFromFloor(), "ok");
 		
 		// execute STATE_2 i.e. send to elevator
 		scheduler.sendStateMachine();
 		
 		assertEquals(scheduler.getCurrentState1().toString(), "STATE_2");
-		assertEquals(scheduler.getIsDataFromFloor(), "");
+		assertEquals(scheduler.getDataFromFloor(), "");
 	}
 
 	/**
@@ -65,7 +65,7 @@ public class SchedulerTest extends TestCase {
 		scheduler.receiveFromFloor("", request);
 		
 		assertEquals(scheduler.getFloorToVisit(), this.floorToVisit);
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		assertEquals(scheduler.getDataFromFloor(), "ok");
 	}
 
 	/**
@@ -77,7 +77,7 @@ public class SchedulerTest extends TestCase {
 		scheduler.receiveFromFloor("", request);
 		
 		assertEquals(scheduler.getFloorToVisit(), this.floorToVisit);
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		assertEquals(scheduler.getDataFromFloor(), "ok");
 		
 		// Send request to elevator
 		scheduler.sendToElevator();
@@ -85,7 +85,7 @@ public class SchedulerTest extends TestCase {
 		scheduler.receiveFromElevator(data);
 		
 		assertEquals(scheduler.getCurrentFloor(), request.getFloorDestination());
-		assertEquals(scheduler.getIsDataFromFloor(), "");
+		assertEquals(scheduler.getDataFromFloor(), "");
 		assert(scheduler.getDataFromElevator().equals(data));
 		assert(!scheduler.isEmptyElevator());
 	}
@@ -118,13 +118,13 @@ public class SchedulerTest extends TestCase {
 		// Receiving request from floor to be sent to the elevator
 		scheduler.receiveFromFloor("", request);
 		
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
+		assertEquals(scheduler.getDataFromFloor(), "ok");
 		assert(scheduler.isEmptyElevator());
 		
 		// Sending response to elevator
 		scheduler.sendToElevator();
 		
-		assertEquals(scheduler.getIsDataFromFloor(),"");
+		assertEquals(scheduler.getDataFromFloor(),"");
 		assert(scheduler.isEmptyElevator()); // elevator is not empty
 	}
 

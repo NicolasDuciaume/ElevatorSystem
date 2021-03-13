@@ -256,10 +256,10 @@ public class Scheduler {
 	 * @param floor
 	 * @param down
 	 * @param floor2
-	 * @param dir
+	 * @param direction
 	 */
 	private void getElevatorFromDifference(HashMap<String, Integer> differenceMap, int floor, boolean down, int floor2,
-			String dir) {
+			String direction) {
 		int minDifference = Collections.min(differenceMap.values());
 		for (String currElevatorName : differenceMap.keySet()) {
 			if (differenceMap.get(currElevatorName).equals(minDifference)) {
@@ -267,7 +267,7 @@ public class Scheduler {
 					if (e.getName().equals(currElevatorName)) {
 						if (down) {
 							e.addToDown(floor);
-							if (dir.equals("UP")) {
+							if (direction.equals("UP")) {
 								e.addToUp(floor2);
 							} else {
 								e.addToDown(floor2);
@@ -275,7 +275,7 @@ public class Scheduler {
 							break;
 						} else {
 							e.addToUp(floor);
-							if (dir.equals("UP")) {
+							if (direction.equals("UP")) {
 								e.addToUp(floor2);
 							} else {
 								e.addToDown(floor2);
@@ -529,7 +529,7 @@ public class Scheduler {
 		return this.currentFloor;
 	}
 
-	public String getIsDataFromFloor() {
+	public String getDataFromFloor() {
 		return this.dataFromFloor;
 	}
 

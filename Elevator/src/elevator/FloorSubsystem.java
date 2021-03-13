@@ -89,15 +89,15 @@ public class FloorSubsystem implements Runnable {
 	 * Parses through a file with a list of requests from the floor and creates a
 	 * list of FloorRequest objects
 	 * 
-	 * @param FileLocation location of the file
+	 * @param fileLocation location of the file
 	 */
-	public void addFloorRequest(String FileLocation) {
+	public void addFloorRequest(String fileLocation) {
 		Timestamp requestTime = new Timestamp(System.currentTimeMillis());
 		long travelTime = 1L;
 		long doorTime = 1L;
 
 		try {
-			File myObj = new File(FileLocation);
+			File myObj = new File(fileLocation);
 			Scanner myReader = new Scanner(myObj);
 
 			while (myReader.hasNextLine()) {
