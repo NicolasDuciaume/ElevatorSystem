@@ -99,8 +99,9 @@ public class Scheduler {
 		//elevatorChange();
 		switch (currentState1) {
 		case STATE_1:
-			sendToElevator();
-			sendToElevator();
+			for(int i = 0; i <= maxElevator;i++){
+				sendToElevator();
+			}
 			currentState1 = SchedulerStates.STATE_2;
 			break;
 		case STATE_2:
@@ -119,8 +120,9 @@ public class Scheduler {
 	public void receiveStateMachine(byte[] data) {
 		switch (currentState2) {
 		case STATE_1:
-			receiveFromElevator(data);
-			receiveFromElevator(data);
+			for(int i = 0; i <= maxElevator;i++){
+				receiveFromElevator(data);
+			}
 			currentState2 = SchedulerStates.STATE_2;
 			break;
 		case STATE_2:
