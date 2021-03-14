@@ -1,39 +1,40 @@
 package elevator;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
 /**
- * Elevator subsystem that handles the different states of the elevator, 
- * receives directions of which floor to visit from the scheduler,
- * and informing the scheduler when the elevator arrives successfully at destination.  
+ * Elevator subsystem that handles the different states of the elevator,
+ * receives directions of which floor to visit from the scheduler, and informing
+ * the scheduler when the elevator arrives successfully at destination.
  * 
- * @author Chris D'Silva      101067295
- * @author Nazifa Tanzim      101074707
+ * @author Chris D'Silva 101067295
+ * @author Nazifa Tanzim 101074707
  */
 public class ElevatorSubsystem implements Runnable {
 
-	private String location; //current location of the elevator
-	private ElevatorStates currentState; //current state of the elevator
-	private Direction motorState; // The motor state is whether the elevator is moving 
-	private Queue<FloorRequest> floorRequests; //Queue of requests that the elevator has to full fill
-	private boolean doorOpen; //Whether the door is open
-	private FloorRequest data; //The current request
+	private String location; // current location of the elevator
+	private ElevatorStates currentState; // current state of the elevator
+	private Direction motorState; // The motor state is whether the elevator is moving
+	private Queue<FloorRequest> floorRequests; // Queue of requests that the elevator has to full fill
+	private boolean doorOpen; // Whether the door is open
+	private FloorRequest data; // The current request
 	private int[] elevatorButtons; // array of buttons
 	private boolean[] elevatorLamps; // array of lamps
-	private Direction directionLamp; //Directional lamp
-	private Scheduler scheduler; //Scheduler object used to receive and pass data
+	private Direction directionLamp; // Directional lamp
+	private Scheduler scheduler; // Scheduler object used to receive and pass data
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
 	private String[] cut = new String[2];
 	private String name;
 	private static int countWaiting = 0;
-	
+
 	/**
-     * Instantiates the variables  
-     */
+	 * Instantiates the variables
+	 */
 	public ElevatorSubsystem(String name) {
-		//this.scheduler = scheduler;
+		// this.scheduler = scheduler;
 		this.name = name;
 		currentState = ElevatorStates.INITIAL_STATE;
 		motorState = Direction.STOPPED;
@@ -49,26 +50,26 @@ public class ElevatorSubsystem implements Runnable {
 			System.exit(1);
 		}
 
-		//Initializing the lamps
+		// Initializing the lamps
 		for (int i = 0; i < elevatorLamps.length; ++i) {
 			elevatorLamps[i] = false;
 		}
 
-		//Initializing the buttons
+		// Initializing the buttons
 		// TODO make number of buttons configurable
 		elevatorButtons = new int[8];
 		for (int i = 0; i < this.elevatorButtons.length; ++i) {
 			elevatorButtons[i] = i + 1;
 		}
 
-		//Initializing the directionLamp
+		// Initializing the directionLamp
 		directionLamp = Direction.STOPPED;
 	}
 
 	/**
 	 * Init packet and socket for elevator
 	 */
-	public void Initialize(){
+	public void Initialize() {
 		byte[] toSend = new byte[100];
 
 		toSend = this.name.getBytes();
@@ -88,28 +89,28 @@ public class ElevatorSubsystem implements Runnable {
 
 	}
 
-
 	/**
-     * Depending on the current state, sets the direction in which the elevator needs to move
-     * or if stationary, then turns on lamps 
-     * 
-     *
-     * @param type Used to identify whether the elevator needs directions or need the floor lamps.
-     */
-	public void parseData(String x, String type) {
-		//TODO: Check if data being parsed is from user or scheduler
-    	//TODO: If there is a request while elevator is moving to a targeted floor
-    	//		direction will have to be adjusted depending on the request
+	 * Depending on the current state, sets the direction in which the elevator
+	 * needs to move or if stationary, then turns on lamps
+	 * 
+	 *
+	 * @param type Used to identify whether the elevator needs directions or need
+	 *             the floor lamps.
+	 */
+	private void parseData(String direction, String type) {
+		// TODO: Check if data being parsed is from user or scheduler
+		// TODO: If there is a request while elevator is moving to a targeted floor
+		// direction will have to be adjusted depending on the request
 		if (type.equals("Direction")) {
-			if (x.equals("UP")) {
+			if (direction.equals("UP")) {
 				motorState = Direction.UP;
-			} else if (x.equals("DOWN")) {
+			} else if (direction.equals("DOWN")) {
 				motorState = Direction.DOWN;
 			}
 		}
 
 		if (type.equals("Floor Number")) {
-			this.elevatorLamps[Integer.parseInt(x) - 1] = true;
+			this.elevatorLamps[Integer.parseInt(direction) - 1] = true;
 		}
 
 	}
@@ -120,7 +121,7 @@ public class ElevatorSubsystem implements Runnable {
 	public void stateMachine() {
 
 		switch (currentState) {
-		case INITIAL_STATE: //Elevator stopped with doors open
+		case INITIAL_STATE: // Elevator stopped with doors open
 			byte[] data = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
 			try {
@@ -129,12 +130,13 @@ public class ElevatorSubsystem implements Runnable {
 				e.printStackTrace();
 				System.exit(1);
 			} // Receive data from Scheduler
-			String dat = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
-			System.out.println(this.name + " Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
-			if (dat.equals("waiting")) {
+			String receivePacketData = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+			System.out.println(
+					this.name + " Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
+			if (receivePacketData.equals("waiting")) {
 				currentState = ElevatorStates.INITIAL_STATE;
-				String s = name+"-"+dat;
-				byte[] toSend = s.getBytes();
+				String elevatorWithRequest = name + "-" + receivePacketData;
+				byte[] toSend = elevatorWithRequest.getBytes();
 				try {
 					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
 				} catch (UnknownHostException e) {
@@ -149,15 +151,14 @@ public class ElevatorSubsystem implements Runnable {
 					System.exit(1);
 				}
 				countWaiting++;
-				if(countWaiting >= 10)
-					System.exit(0); 
-			}
-			else {
+				if (countWaiting >= 10)
+					System.exit(0);
+			} else {
 				currentState = ElevatorStates.STATE_1;
 				countWaiting = 0;
 			}
 			break;
-		case STATE_1: //doors close
+		case STATE_1: // doors close
 			// TODO: Timer Event needed for future Iterations. Door open time,
 			// movement time between floors.
 			doorOpen = false;
@@ -165,7 +166,7 @@ public class ElevatorSubsystem implements Runnable {
 			parseData(this.cut[1], "Direction");
 			currentState = ElevatorStates.STATE_2;
 			break;
-		case STATE_2: //Elevator moving
+		case STATE_2: // Elevator moving
 			// Turn on lamps
 			directionLamp = motorState;
 			parseData(this.cut[0], "Floor Number");
@@ -173,12 +174,12 @@ public class ElevatorSubsystem implements Runnable {
 
 			currentState = ElevatorStates.STATE_3;
 			break;
-		case STATE_3: //reach destination
+		case STATE_3: // reach destination
 			// TODO: Timer Event needed for future Iterations. Door open time
 			doorOpen = true;
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
-			String msg = name+"-arrived-" + this.cut[0];
+			String msg = name + "-arrived-" + this.cut[0];
 			byte[] toSend = msg.getBytes();
 			try {
 				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
@@ -193,7 +194,8 @@ public class ElevatorSubsystem implements Runnable {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			//scheduler.receiveStateMachine(null, msg); // Send data from elevator to Scheduler
+			// scheduler.receiveStateMachine(null, msg); // Send data from elevator to
+			// Scheduler
 			System.out.println(this.name + " Sent: " + msg);
 			currentState = ElevatorStates.INITIAL_STATE;
 			break;
@@ -201,8 +203,8 @@ public class ElevatorSubsystem implements Runnable {
 	}
 
 	/**
-     * Calls the state machine continuously while thread is active
-     */
+	 * Calls the state machine continuously while thread is active
+	 */
 	@Override
 	public void run() {
 		System.out.println(name + " started!");
@@ -243,31 +245,31 @@ public class ElevatorSubsystem implements Runnable {
 	}
 
 	/**
-     * Enum containing all the states
-     *
-     */
+	 * Enum containing all the states
+	 *
+	 */
 	public static enum ElevatorStates {
-		INITIAL_STATE, //Elevator stopped with doors open
-		STATE_1, //Close doors
-	    STATE_2, //Elevator moving
-	    STATE_3; //Reach destination
+		INITIAL_STATE, // Elevator stopped with doors open
+		STATE_1, // Close doors
+		STATE_2, // Elevator moving
+		STATE_3; // Reach destination
 
 		private ElevatorStates() {
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param args
 	 */
-	public static void main(String[] args){
-		
+	public static void main(String[] args) {
+
 		ReadPropertyFile r = new ReadPropertyFile();
-		
-		Thread elevatorThreads[] = new Thread[r.getNumElevators()];  
-		
-		for(int i = 0; i < r.getNumElevators(); i++) {
-			elevatorThreads[i]= new Thread(new ElevatorSubsystem("Elevator" + (i+1)), "Elevator" + (i+1));
+
+		Thread elevatorThreads[] = new Thread[r.getNumElevators()];
+
+		for (int i = 0; i < r.getNumElevators(); i++) {
+			elevatorThreads[i] = new Thread(new ElevatorSubsystem("Elevator" + (i + 1)), "Elevator" + (i + 1));
 			elevatorThreads[i].start();
 		}
 	}
