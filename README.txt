@@ -14,11 +14,16 @@ GENERAL USAGE NOTES
 
 - Elevator project is written in Java making use of the Runnable Interface
 
-- FloorSubsystem, ElevatorSubsystem, and Scheduler thread are run concurrently
-  where the Floor and Elevator threads are clients of the scheduler
+- FloorSubsystem, ElevatorSubsystem, and Scheduler run concurrently
+  You start the Scheduler, then the FloorSubsystem and finaly the ElevatorSubystem which then all communicate
+  to one another via UDP
   
 - Current version of application allows Scheduler to act as communication channel from 
-  FloorSubsystem thread to the ElevatorSubsystem thread and vice versa
+  FloorSubsystem thread to the ElevatorSubsystem thread and vice versa. Scheduler also is in
+  charge of deciding which command to send to the elevator dependent on what is needed at the time
+  
+- No direct modification is needed for the code to run. Only changes to make for more elevators or floors are to
+  be made inside the configuration file and floor request to be added to File.txt
 ----------------------------------------------------------------------------------------
 
 Files
@@ -34,24 +39,27 @@ UML Class Diagram.png   - UML Diagram
 Sequence Diagram.png    - Sequence Diagram
 State Diagram.png       - State Diagram
 File.txt                - File to be read by FloorSubsystem.java
-
+ReadPropertyFile.java   - Reads the configurations for the program to run with
+config.properties       - Configuration file for the program
 
 
 Running application
 ====================
-Java application can be run in any java compiler from the Main.java class.
-The floorSubsystem class is given the input file name and creates a FloorRequest with 
-the information contained within that file. The FloorSubsystem then lauches the State machine
-responsable for reading for class' while the elevatorSubsystem State machine launches the State 
-machine for reading inputs. These two state machines then switch between their two options to either 
-read from the ElevatorSubsystem/FloorSubsystem or to write to them. The State machine within
-The Elevator Subsystem Uses the inputs it receives to control the lights and doors though its own 
-State machine. The State Diagrams can be found included here.
+Java application can be run in any java compiler by running first the Scheduler, then the
+FloorSubstystem and finally the ElevatorSubsystem.
+At the start of the programs the Scheduler listens to UDP requests from the FloorSubsystem and 
+the ElevatorSubsystem(s). All program have an initialize method which for the FloorSubsystem is sending
+a UDP message for the scheduler to catch its address and port then send back the amount of elevators to 
+the FloorSubsystem. As for the ElevatorSubsystem(s) then send their UDP request to create the ElevatorData files for each elevators 
+so that the scheduler can keep track of all of them and their address/ports. The process then launches as back in forth the State 
+machines allow messages to be sent and received from one another through UDP while the scheduler catches the new request and 
+formulates the best paths for the elevators to take dependent on how many elevators their are. Once all 
+Request have been completed the FloorSubsystem stops and wait for new request while the elevator wait to be given them.
 
 BreakDown
 ====================
-Nicolas Duciaume: README, SchedulerSubsystem statemachine, Error correction
-Jameel Alidina: Direction, FloorRequest, SchedulerSubsystem statemachine
-Tooba Sheikh: SchedulerSubsystem statemachine, Error correction
-Chris D'Silva: Creating UML and Sequence Diagrams, ElevatorSubsystem statemachine
-Nazifa Tanzim: Creating ElevatorSubsystem statemachine, Creating Tests
+Nicolas Duciaume: README, Conversion to UDP, Allowing for multiple elevators
+Jameel Alidina: Checkpriority method, Configuration file, refactoring
+Tooba Sheikh: Checkpriority method, Printing formating correction, Error correction, refactoring
+Chris D'Silva: Creating UML and Sequence Diagrams, Checkpriority method
+Nazifa Tanzim:  Checkpriority method, Printing formating correction, Creating Tests
