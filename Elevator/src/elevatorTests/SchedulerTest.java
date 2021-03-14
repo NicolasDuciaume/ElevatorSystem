@@ -1,131 +1,184 @@
-package elevatorTests;
-
-import elevator.ElevatorSubsystem;
-import elevator.FloorRequest;
-import elevator.FloorSubsystem;
-import elevator.Scheduler;
-import junit.framework.TestCase;
-
-/**
- * 
- * @author Nazifa Tanzim 101074707
- *
- */
-public class SchedulerTest extends TestCase {
-	private Scheduler scheduler;
-	private FloorSubsystem floor;
-	private FloorRequest request;
-	private int floorToVisit;
-
-	protected void setUp() throws Exception {
-		super.setUp();
-
-		scheduler = new Scheduler();
-		//floor = new FloorSubsystem("File.txt", scheduler);
-		request = floor.getListOfRequests().remove(0);
-		floorToVisit = 2;
-	}
-
-	/**
-	 * Test state machine that is responsible for sending data to floor and elevator
-	 */
-	public void testSendStateMachine() {
-		scheduler.receiveFromFloor("", request);
-		
-		// receive state machine should start in STATE_2 i.e. sending to elevator first
-		assertEquals(scheduler.getCurrentState1().toString(), "STATE_1");
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
-		
-		// execute STATE_2 i.e. send to elevator
-		scheduler.sendStateMachine();
-		
-		assertEquals(scheduler.getCurrentState1().toString(), "STATE_2");
-		assertEquals(scheduler.getIsDataFromFloor(), "");
-	}
-
-	/**
-	 * Test state machine that is responsible for receiving data to floor and elevator
-	 */
-	public void testReceiveStateMachine() {
-		// receive state machine should start in STATE_2 i.e. receiving from floor first
-		assertEquals(scheduler.getCurrentState2().toString(), "STATE_2");
-		
-		scheduler.receiveStateMachine(request, ""); //Executing STATE_2
-		
-		// State should be set to STATE_! after completing STATE_2
-		assertEquals(scheduler.getCurrentState2().toString(), "STATE_1");
-		
-	}
-	
-	/**
-	 * Testing receiving from floor
-	 */
-	public void testReceiveFromFloor() {
-		// Receive request from floor
-		scheduler.receiveFromFloor("", request);
-		
-		assertEquals(scheduler.getFloorToVisit(), this.floorToVisit);
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
-	}
-
-	/**
-	 * Testing receiving from elevator
-	 */
-	public void testReceiveFromElevator() {
-		String data = "arrived " + request.getFloorDestination();
-		// Getting request from floor and sending it to elevator
-		scheduler.receiveFromFloor("", request);
-		
-		assertEquals(scheduler.getFloorToVisit(), this.floorToVisit);
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
-		
-		// Send request to elevator
-		scheduler.sendToElevator();
-		// Receiving the elevator's response to the request
-		scheduler.receiveFromElevator(data);
-		
-		assertEquals(scheduler.getCurrentFloor(), request.getFloorDestination());
-		assertEquals(scheduler.getIsDataFromFloor(), "");
-		assert(scheduler.getDataFromElevator().equals(data));
-		assert(!scheduler.isEmptyElevator());
-	}
-	
-	/**
-	 * Testing sending to floor
-	 */
-	public void testSendToFloor() {
-		String data = "arrived " + request.getFloorDestination();
-		
-		// Sending request to elevator and receiving the response to be sent to the floor
-		scheduler.receiveFromFloor("", request);
-		scheduler.sendToElevator();	
-		scheduler.receiveFromElevator(data);
-		
-		assertEquals(scheduler.getDataFromElevator(), data);
-		assert(!scheduler.isEmptyFloor());
-		
-		scheduler.sendToFloor(); // sending response to floor
-		
-		assertEquals(scheduler.getDataFromElevator(), "");
-		assert(scheduler.isEmptyFloor()); // floor is empty
-		
-	}
-	
-	/**
-	 * Testing sending to elevator
-	 */
-	public void testSendToElevator() {
-		// Receiving request from floor to be sent to the elevator
-		scheduler.receiveFromFloor("", request);
-		
-		assertEquals(scheduler.getIsDataFromFloor(), "ok");
-		assert(scheduler.isEmptyElevator());
-		
-		// Sending response to elevator
-		scheduler.sendToElevator();
-		
-		assertEquals(scheduler.getIsDataFromFloor(),"");
-		assert(scheduler.isEmptyElevator()); // elevator is not empty
-	}
-
-}
+//package elevatorTests;
+//
+//import java.io.IOException;
+//import java.net.DatagramPacket;
+//import java.net.DatagramSocket;
+//import java.net.InetAddress;
+//import java.net.SocketException;
+//import java.net.UnknownHostException;
+//
+//import elevator.*;
+//import junit.framework.TestCase;
+//
+///**
+// * 
+// * @author Nazifa Tanzim 101074707
+// *
+// */
+//public class SchedulerTest extends TestCase {
+//	private Scheduler scheduler;
+//	private FloorSubsystem floor;
+//	private FloorRequest floorRequest;
+//	private byte[] data;
+//	private int floorToVisit;
+//	private DatagramSocket socket;
+//
+//	protected void setUp() throws Exception {
+//		super.setUp();
+//
+//		scheduler = new Scheduler();
+//		scheduler.InitializePort(1);
+//
+//		floor = new FloorSubsystem("File_test.txt");
+//		floor.Initialize();
+//
+//		floorRequest = floor.getListOfRequests().remove(0);
+//		data = floorRequest.toString().getBytes();
+//		floorToVisit = 2;
+//
+//		socket = new DatagramSocket(50);
+//	}
+//
+//	protected void tearDown() throws Exception {
+//		super.tearDown();
+//		scheduler.closeSockets();
+//		socket.close();
+//	}
+//
+//	/**
+//	 * Test state machine that is responsible for receiving data to floor and
+//	 * elevator
+//	 */
+////	public void testReceiveStateMachine() {
+////		// receive state machine should start in STATE_2 i.e. receiving from floor first
+////		assertEquals(scheduler.getCurrentState2().toString(), "STATE_2");
+////		
+////		scheduler.receiveStateMachine(data); //Executing STATE_2
+////		
+////		// State should be set to STATE_! after completing STATE_2
+////		assertEquals(scheduler.getCurrentState2().toString(), "STATE_1");
+////		
+////	}
+//
+//	/**
+//	 * Testing receiving from floor
+//	 * 
+//	 * @throws SocketException
+//	 */
+//	public void testReceiveFromFloor() throws SocketException {
+//		// Send a message to scheduler as the floor
+//		DatagramPacket sendPacket;
+//		try {
+//			byte[] s = "go".getBytes();
+//			sendPacket = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 69);
+//
+//			socket.send(sendPacket);
+//
+//			scheduler.getFloorSocket().send(sendPacket);
+//			System.out.println("packet sent to port 50");
+//			scheduler.receiveFromFloor(sendPacket.getData());
+//			System.out.println("packet sent to port 69");
+//
+//			DatagramPacket p = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 50);
+//
+//			socket.receive(p);
+//
+//			assertEquals(scheduler.getReceivePacket(), p);
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	/**
+//	 * Testing receiving from elevator
+//	 */
+//	public void testReceiveFromElevator() {
+//		// Send a message to scheduler as the elevator
+//		DatagramPacket sendPacket;
+//		try {
+//			byte[] s = "waiting".getBytes();
+//			sendPacket = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 420);
+//
+//			socket.send(sendPacket);
+//
+//			scheduler.getElevatorSocket().send(sendPacket);
+//			System.out.println("packet sent to port 50");
+//			scheduler.receiveFromElevator(sendPacket.getData());
+//			System.out.println("packet sent to port 69");
+//
+//			DatagramPacket p = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 50);
+//
+//			socket.receive(p);
+//
+//			assertEquals(scheduler.getReceivePacket(), p);
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	/**
+//	 * Testing sending to floor
+//	 */
+//	public void testSendToFloor() {
+//		// Send a message to floor
+//		DatagramPacket sendPacket;
+//		try {
+//			byte[] s = "waiting".getBytes();
+//			sendPacket = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 69);
+//
+//			socket.send(sendPacket);
+//
+//			scheduler.getElevatorSocket().send(sendPacket);
+//			System.out.println("packet sent to port 50");
+//			scheduler.sendToFloor();
+//			System.out.println("packet sent to port 69");
+//
+//			DatagramPacket p = new DatagramPacket(s, s.length);
+//			DatagramPacket p2 = new DatagramPacket(s, s.length);
+//
+//			socket.receive(p);
+//			scheduler.getFloorSocket().receive(p2);
+//			assertEquals(p2, p);
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	/**
+//	 * Testing sending to elevator
+//	 */
+//	public void testSendToElevator() {
+//		// Send a message to scheduler as the elevator
+//		DatagramPacket sendPacket;
+//		try {
+//			byte[] s = "waiting".getBytes();
+//			sendPacket = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 420);
+//
+//			socket.send(sendPacket);
+//
+//			scheduler.getElevatorSocket().send(sendPacket);
+//			System.out.println("packet sent to port 50");
+//			scheduler.receiveFromFloor(sendPacket.getData());
+//			System.out.println("packet sent to port 69");
+//
+//			DatagramPacket p = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 50);
+//			DatagramPacket p2 = new DatagramPacket(s, s.length, InetAddress.getLocalHost(), 50);
+//
+//			// Receiving both packets and comparing to make sure they're the same/sent properly
+//			socket.receive(p);
+//			scheduler.getElevatorSocket().receive(p2);
+//			assertEquals(p2, p);
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+//
+//}

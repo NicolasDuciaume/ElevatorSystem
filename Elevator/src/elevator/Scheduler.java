@@ -442,6 +442,10 @@ public class Scheduler {
 	}
 
 	/* For testing purposes */
+	public void closeSockets() {
+		this.sendReceiveSocketElevators.close();
+		this.sendReceiveSocketFloor.close();
+	}
 	public String getDataFromElevator() {
 		return this.dataFromElevator;
 	}
@@ -476,6 +480,22 @@ public class Scheduler {
 
 	public String getIsDataFromFloor() {
 		return this.isDataFromFloor;
+	}
+	
+	public DatagramPacket getReceivePacket() {
+		return this.receivePacket;
+	}
+	
+	public DatagramPacket getSendPacket() {
+		return this.sendPacket;
+	}
+	
+	public DatagramSocket getFloorSocket() {
+		return this.sendReceiveSocketFloor;
+	}
+	
+	public DatagramSocket getElevatorSocket() {
+		return this.sendReceiveSocketElevators;
 	}
 
 	/**
