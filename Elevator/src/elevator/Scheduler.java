@@ -298,7 +298,7 @@ public class Scheduler {
 	 * 
 	 * @param origin thats is the floor that need to be added to the queue
 	 */
-	private synchronized void checkPriority(int origin, String floorButtonDirection, int floor) {
+	public synchronized void checkPriority(int origin, String floorButtonDirection, int floor) {
 
 		HashMap<String, Integer> differenceUp = new HashMap<>();
 		HashMap<String, Integer> differenceDown = new HashMap<>();
@@ -411,7 +411,7 @@ public class Scheduler {
 	 * 
 	 * @return
 	 */
-	private synchronized int checkSend(ElevatorData elevator) {
+	public synchronized int checkSend(ElevatorData elevator) {
 		int toVisit = -1;
 		// If up queue is empty and down queue is not empty, set the elevator direction
 		// to down
@@ -497,12 +497,20 @@ public class Scheduler {
 	public DatagramSocket getElevatorSocket() {
 		return this.sendReceiveSocketElevators;
 	}
+	
+	public ArrayList<ElevatorData> getElevators() {
+		return this.elevators;
+	}
+	
+	public void setElevators(ArrayList<ElevatorData> e) {
+		this.elevators = e;
+	}
 
 	/**
 	 * 
 	 * @param numOfElevators
 	 */
-	private void InitializePort(int numOfElevators) {
+	public void InitializePort(int numOfElevators) {
 		maxElevator = numOfElevators;
 		maxElevator--;
 		System.out.println(maxElevator);

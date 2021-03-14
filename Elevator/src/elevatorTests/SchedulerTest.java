@@ -1,64 +1,107 @@
-//package elevatorTests;
-//
-//import java.io.IOException;
-//import java.net.DatagramPacket;
-//import java.net.DatagramSocket;
-//import java.net.InetAddress;
-//import java.net.SocketException;
-//import java.net.UnknownHostException;
-//
-//import elevator.*;
-//import junit.framework.TestCase;
-//
-///**
-// * 
-// * @author Nazifa Tanzim 101074707
-// *
-// */
-//public class SchedulerTest extends TestCase {
-//	private Scheduler scheduler;
-//	private FloorSubsystem floor;
-//	private FloorRequest floorRequest;
-//	private byte[] data;
-//	private int floorToVisit;
-//	private DatagramSocket socket;
-//
-//	protected void setUp() throws Exception {
-//		super.setUp();
-//
-//		scheduler = new Scheduler();
+package elevatorTests;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+
+import elevator.*;
+import junit.framework.TestCase;
+
+/**
+ * 
+ * @author Nazifa Tanzim 101074707
+ *
+ */
+public class SchedulerTest extends TestCase {
+	private Scheduler scheduler;
+	private FloorSubsystem floor;
+	private FloorRequest floorRequest;
+	private byte[] data;
+	private int floorToVisit;
+	private DatagramSocket socket;
+
+	protected void setUp() throws Exception {
+		super.setUp();
+
+		scheduler = new Scheduler();
 //		scheduler.InitializePort(1);
-//
-//		floor = new FloorSubsystem("File_test.txt");
+
+		floor = new FloorSubsystem("File_test.txt");
 //		floor.Initialize();
-//
-//		floorRequest = floor.getListOfRequests().remove(0);
-//		data = floorRequest.toString().getBytes();
-//		floorToVisit = 2;
-//
-//		socket = new DatagramSocket(50);
-//	}
-//
-//	protected void tearDown() throws Exception {
-//		super.tearDown();
-//		scheduler.closeSockets();
-//		socket.close();
-//	}
-//
+
+		floorRequest = floor.getListOfRequests().remove(0);
+		data = floorRequest.toString().getBytes();
+		floorToVisit = 2;
+
+		socket = new DatagramSocket(50);
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		scheduler.closeSockets();
+		socket.close();
+	}
+	
+	/**
+	 * This function should add the floor request to the appropriate queue
+	 */
+	public void testCheckPriority() {
+		ArrayList<ElevatorData> elevators = new ArrayList<>();
+		DatagramPacket p = new DatagramPacket(new byte[100], 100);
+		ElevatorData e = new ElevatorData("Elevator1", p.getPort(), p.getAddress(), 0);
+		elevators.add(e);
+		
+		scheduler.setElevators(elevators);
+		assertEquals(e.getDownQueue().size(), 0);
+		assertEquals(e.getUpQueue().size(), 0);
+		
+		scheduler.checkPriority(2, "UP", 4);
+		
+		assertEquals(e.getUpQueue().size(), 2); // added 2 requests to go up to floor 2, then 4
+		assertEquals(e.getDownQueue().size(), 0);
+		
+	}
+	
+	/**
+	 * This function should update the direction of the elevator
+	 */
+	public void testCheckSend() {
+		ArrayList<ElevatorData> elevators = new ArrayList<>();
+		DatagramPacket p = new DatagramPacket(new byte[100], 100);
+		ElevatorData e = new ElevatorData("Elevator1", p.getPort(), p.getAddress(), 0);
+		elevators.add(e);
+		
+		scheduler.setElevators(elevators);
+		assertEquals(e.getDirection().toString(), "STOPPED");
+		assertEquals(e.getDownQueue().size(), 0);
+		assertEquals(e.getUpQueue().size(), 0);
+		
+		scheduler.checkPriority(2, "UP", 4); // adding requests to elevator's queue
+		scheduler.checkSend(e);
+		assertEquals(e.getDirection().toString(), "UP");
+		assertEquals(e.getUpQueue().size(), 1);
+		assertEquals(e.getDownQueue().size(), 0);
+		
+	}
+
 //	/**
 //	 * Test state machine that is responsible for receiving data to floor and
 //	 * elevator
 //	 */
-////	public void testReceiveStateMachine() {
-////		// receive state machine should start in STATE_2 i.e. receiving from floor first
-////		assertEquals(scheduler.getCurrentState2().toString(), "STATE_2");
-////		
-////		scheduler.receiveStateMachine(data); //Executing STATE_2
-////		
-////		// State should be set to STATE_! after completing STATE_2
-////		assertEquals(scheduler.getCurrentState2().toString(), "STATE_1");
-////		
-////	}
+//	public void testReceiveStateMachine() {
+//		// receive state machine should start in STATE_2 i.e. receiving from floor first
+//		assertEquals(scheduler.getCurrentState2().toString(), "STATE_2");
+//		
+//		scheduler.receiveStateMachine(data); //Executing STATE_2
+//		
+//		// State should be set to STATE_! after completing STATE_2
+//		assertEquals(scheduler.getCurrentState2().toString(), "STATE_1");
+//		
+//	}
 //
 //	/**
 //	 * Testing receiving from floor
@@ -180,5 +223,5 @@
 //			e.printStackTrace();
 //		}
 //	}
-//
-//}
+
+}
