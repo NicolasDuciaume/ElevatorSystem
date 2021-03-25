@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.Scanner; //Import this class to accept input
 
 /**
- * 
+ *
  * Floor subsystem handles the floors being requested and the message to be sent
  * once the floors are arrived at
- * 
+ *
  * @author Nicolas Duciaume 101124713
  * @author Jameel Alidina 101077040
  *
@@ -31,7 +31,7 @@ public class FloorSubsystem implements Runnable {
 
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
-	 * 
+	 *
 	 * @param FileLocation String that indicates the name and path of the input file
 	 *
 	 */
@@ -88,7 +88,7 @@ public class FloorSubsystem implements Runnable {
 	/**
 	 * Parses through a file with a list of requests from the floor and creates a
 	 * list of FloorRequest objects
-	 * 
+	 *
 	 * @param fileLocation location of the file
 	 */
 	public void addFloorRequest(String fileLocation) {
@@ -186,23 +186,10 @@ public class FloorSubsystem implements Runnable {
 			}
 
 			if (wait.equals("waiting")) {
-				byte[] data = new byte[100];
-				receivePacket = new DatagramPacket(data, data.length);
-				try {
-					sendReceiveSocket.receive(receivePacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-					System.exit(1);
-				} // Receive data from Scheduler
-				String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
-				String[] splitElevatorResponse = (new String(receivePacket.getData(), 0,
-						this.receivePacket.getLength())).split(" ");
-				if (splitElevatorResponse[1].equals("arrived")) {
-					this.setLampsSensors(splitElevatorResponse[2]);
-				}
-				System.out.println("Floor received: " + toPrint);
 				System.out.println("Floor has nothing to send");
 				wait = "";
+				while(true){
+				testing();}
 			}
 		} else {
 			FloorRequest floorRequest = listofRequests.get(0);
@@ -249,7 +236,7 @@ public class FloorSubsystem implements Runnable {
 					this.setLampsSensors(individualElevator[2]);
 					floorStatus = "go";
 				}
-				else if (individualElevator[1].equals("moving")) {
+				if (individualElevator[1].equals("moving")) {
 					floorStatus = "go";
 				}
 			}
@@ -257,7 +244,6 @@ public class FloorSubsystem implements Runnable {
 			String print = "";
 
 			for (String p : elevators) {
-				//System.out.println(p);
 				if (print.equals("")) {
 					print = p;
 				} else {
@@ -268,11 +254,10 @@ public class FloorSubsystem implements Runnable {
 			System.out.println("Floor received: " + print);
 
 			boolean elevatorWait = true;
-
 			for (int i = 0; i < numOfElevators; i++) {
 				String splitResponse = splitElevatorResponse[i];
 				String[] individualElevator = splitResponse.split("-");
-				if (individualElevator[1].equals("waiting") || individualElevator[1].equals("moving")) {
+				if (individualElevator[1].equals("waiting")) {
 					elevatorWait = false;
 				}
 			}
@@ -317,7 +302,7 @@ public class FloorSubsystem implements Runnable {
 						this.setLampsSensors(individualElevator[2]);
 						floorStatus = "go";
 					}
-					else if (individualElevator[1].equals("moving")) {
+					if (individualElevator[1].equals("moving")) {
 						floorStatus = "go";
 					}
 				}
@@ -336,20 +321,155 @@ public class FloorSubsystem implements Runnable {
 				for (int x = 0; x < numOfElevators; x++) {
 					String t = splitElevatorResponse[x];
 					String[] individualElevator = t.split("-");
-					if (individualElevator[1].equals("waiting") || individualElevator[1].equals("moving")) {
+					if (individualElevator[1].equals("waiting")) {
 						elevatorWait = false;
 					}
 				}
-				System.out.println(elevatorWait);
 				System.out.println("Floor received: " + toPrint);
 			}
 			listofRequests.remove(0);
 		}
 	}
 
+	public void testing(){
+		wait = "go";
+		String floorRequestData = wait.toString();
+		byte[] toSend = floorRequestData.getBytes();
+		try {
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		try {
+			this.sendReceiveSocket.send(this.sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("Floor Sent: " + floorRequestData);
+
+		byte[] data = new byte[100];
+		receivePacket = new DatagramPacket(data, data.length);
+		try {
+			sendReceiveSocket.receive(receivePacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		// Receive data from Scheduler
+		String floorStatus = "";
+		String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+		String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength()))
+				.split(" ");
+
+		String[] elevators = new String[numOfElevators];
+		for (int i = 0; i < numOfElevators; i++) {
+			String splitResponse = splitElevatorResponse[i];
+			// System.out.println(t);
+			String[] individualElevator = splitResponse.split("-");
+			elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
+					- 1] = splitResponse;
+			if (individualElevator[1].equals("arrived")) {
+				this.setLampsSensors(individualElevator[2]);
+				floorStatus = "go";
+			}
+			if (individualElevator[1].equals("moving")) {
+				floorStatus = "go";
+			}
+		}
+
+		String print = "";
+
+		for (String p : elevators) {
+			if (print.equals("")) {
+				print = p;
+			} else {
+				print = print + " " + p;
+			}
+		}
+
+		System.out.println("Floor received: " + print);
+
+		boolean elevatorWait = true;
+		for (int i = 0; i < numOfElevators; i++) {
+			String splitResponse = splitElevatorResponse[i];
+			String[] individualElevator = splitResponse.split("-");
+			if (individualElevator[1].equals("waiting")) {
+				elevatorWait = false;
+			}
+		}
+
+		while (elevatorWait) {
+			byte[] toSend2 = floorStatus.getBytes();
+			try {
+				this.sendPacket = new DatagramPacket(toSend2, toSend2.length, InetAddress.getLocalHost(), 69);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			try {
+				this.sendReceiveSocket.send(this.sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			System.out.println("Floor Sent: " + floorStatus);
+
+			data = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+			try {
+				sendReceiveSocket.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			// Receive data from Scheduler
+			floorStatus = "";
+			toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+			splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength()))
+					.split(" ");
+
+			for (int i = 0; i < splitElevatorResponse.length; i++) {
+				String splitResponse = splitElevatorResponse[i];
+				String[] individualElevator = splitResponse.split("-");
+				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
+						- 1] = splitResponse;
+				if (individualElevator[1].equals("arrived")) {
+					this.setLampsSensors(individualElevator[2]);
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("moving")) {
+					floorStatus = "go";
+				}
+			}
+
+			print = "";
+
+			for (String p : elevators) {
+				if (print.equals("")) {
+					print = p;
+				} else {
+					print = print + " " + p;
+				}
+			}
+
+			elevatorWait = true;
+			for (int x = 0; x < numOfElevators; x++) {
+				String t = splitElevatorResponse[x];
+				String[] individualElevator = t.split("-");
+				if (individualElevator[1].equals("waiting")) {
+					elevatorWait = false;
+				}
+			}
+			System.out.println("Floor received: " + toPrint);
+		}
+	}
 	/**
 	 * Getter for Unit Testing
-	 * 
+	 *
 	 * @return listOfRequests
 	 */
 	public ArrayList<FloorRequest> getListOfRequests() {

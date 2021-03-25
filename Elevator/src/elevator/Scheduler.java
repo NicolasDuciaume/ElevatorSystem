@@ -172,7 +172,7 @@ public class Scheduler {
 			System.exit(1);
 		}
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
-		System.out.println(name);
+		//System.out.println(name);
 
 		// Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = name.split("-");
@@ -180,6 +180,27 @@ public class Scheduler {
 		for(String tt: test){
 			String[] test2 = tt.split("-");
 			if(test2[0].equals(splitElevatorMsg[0])){
+				if(test2[1].equals("moving") && !splitElevatorMsg[1].equals("moving")){
+					mess = "";
+					for(String tt2: test){
+						if(tt2.equals(tt)){
+							if(mess.equals("")){
+								mess = mess + name ;
+							}
+							else {
+								mess = mess + " " + name ;
+							}
+						}
+						else{
+							if(mess.equals("")){
+								mess = mess + tt2 ;
+							}
+							else {
+								mess = mess + " " + tt2 ;
+							}
+						}
+					}
+				}
 				return false;
 			}
 		}
@@ -189,10 +210,11 @@ public class Scheduler {
 			else {
 				if(splitElevatorMsg[1].equals("moving")){
 					if(mess.equals("")){
-						mess = mess + splitElevatorMsg[0] + "-moving" ;
+						mess = mess + splitElevatorMsg[0] + "-moving-" + splitElevatorMsg[2] ;
 					}
 					else {
-						mess = mess + " " + splitElevatorMsg[0] + "-moving" ;
+						mess = mess + " " + splitElevatorMsg[0] + "-moving-" + splitElevatorMsg[2] ;
+						waiting--;
 					}
 				}
 				else if(splitElevatorMsg[1].equals("waiting")){

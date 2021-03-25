@@ -30,6 +30,7 @@ public class ElevatorSubsystem implements Runnable {
 	private String name;
 	private static int countWaiting = 0;
 	private long time = 0;
+	private int moving = 1;
 
 
 	/**
@@ -153,8 +154,8 @@ public class ElevatorSubsystem implements Runnable {
 					System.exit(1);
 				}
 				countWaiting++;
-				if (countWaiting >= 10)
-					System.exit(0);
+				//if (countWaiting >= 10)
+					//System.exit(0);
 			} else {
 				currentState = ElevatorStates.STATE_1;
 				countWaiting = 0;
@@ -181,8 +182,16 @@ public class ElevatorSubsystem implements Runnable {
 			long y = Long.parseLong("3000000000");
 			long x = y * Math.abs(Integer.parseInt(this.cut[0]) - location);
 			if(System.nanoTime()  <= (x + time)){
+				if(System.nanoTime()  >= (y + time)){
+					if(this.cut[1].equals("UP")){
+						location++;
+					}
+					else if(this.cut[1].equals("DOWN")){
+						location--;
+					}
+				}
 				System.out.println("got here");
-				String msg = name + "-moving";
+				String msg = name + "-moving-" + location;
 				byte[] toSend = msg.getBytes();
 				try {
 					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
