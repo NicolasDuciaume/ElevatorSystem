@@ -1,11 +1,12 @@
 package elevator;
 
+
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.io.IOException;
 import java.net.*;
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.*;
 import java.util.Scanner; //Import this class to accept input
 
 /**
@@ -20,14 +21,14 @@ import java.util.Scanner; //Import this class to accept input
 public class FloorSubsystem implements Runnable {
 
 	private String data;
-	private Scheduler scheduler;
 	private ArrayList<FloorRequest> listofRequests;
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
 	private String wait = "waiting";
-	private int lastRequest;
 	private int numOfElevators = 0;
 	public int requestCount = 0;
+	private ReadPropertyFile configFile;
+	private Map<Integer,Boolean[]> floorLamps; 
 
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
@@ -38,9 +39,15 @@ public class FloorSubsystem implements Runnable {
 	public FloorSubsystem(String FileLocation) {
 		// this.scheduler = scheduler;
 		this.listofRequests = new ArrayList<FloorRequest>();
+		configFile = new ReadPropertyFile();
+		floorLamps = new HashMap<Integer,Boolean[]>();
+		for(int i = 0; i < configFile.getNumFloors(); i++) {
+			Boolean[] b = {false,false};
+			floorLamps.put(i+1, b);
+		}
 		this.addFloorRequest(FileLocation);
-		FloorRequest floorRequest = listofRequests.get(listofRequests.size() - 1);
-		this.lastRequest = floorRequest.getFloorDestination();
+		
+		
 		try {
 			sendReceiveSocket = new DatagramSocket();
 		} catch (SocketException se) {
@@ -92,7 +99,6 @@ public class FloorSubsystem implements Runnable {
 	 * @param fileLocation location of the file
 	 */
 	public void addFloorRequest(String fileLocation) {
-		Timestamp requestTime = new Timestamp(System.currentTimeMillis());
 		long travelTime = 1L;
 		long doorTime = 1L;
 
@@ -104,20 +110,29 @@ public class FloorSubsystem implements Runnable {
 				this.data = myReader.nextLine();
 				String[] requestArray = this.data.split(" ");
 				String direction = requestArray[2];
+				Boolean[] currLampStatus = floorLamps.get(Integer.parseInt(requestArray[1]));
 				Direction requestDirection;
 				if (direction.equals("Up")) {
+					currLampStatus[0] = true;
 					requestDirection = Direction.UP;
 				} else if (direction.equals("Down")) {
 					requestDirection = Direction.DOWN;
+					currLampStatus[1] = true;
 				} else {
 					requestDirection = Direction.STOPPED;
 				}
 
+				
 				FloorRequest request = new FloorRequest(requestArray[0], travelTime, doorTime,
 						Integer.parseInt(requestArray[1]), Integer.parseInt(requestArray[3]), requestDirection);
 				this.listofRequests.add(request);
 			}
 
+			for(Integer i : floorLamps.keySet()) {
+				Boolean[] b = floorLamps.get(i);
+				System.out.println("Floor " + i +"	UP: " + b[0] + " " + "DOWN: " + b[1]);
+			}
+			
 			myReader.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("File not found.");
@@ -126,9 +141,36 @@ public class FloorSubsystem implements Runnable {
 
 	}
 
-	// TODO: Turn Lamps, buttons etc on
+	// TODO: Turn Lamps, buttons etc on/off
 	public void setLampsSensors(String floor) {
+		
+		//Turn off Floor lamp at the floor it was requested at when elevator arrives at requested floor
+//		Boolean[] b = floorLamps.get(Integer.parseInt(floor));
+//		if(b[0]) {
+//			b[0] = false;
+//			System.out.println("Floor " + floor + " lamp UP turned off");
+//		}
+//		if(b[1]) {
+//			b[1] = false;
+//			System.out.println("Floor " + floor + " lamp DOWN turned off");
+//		}
+//		
 	}
+	
+	private void setFloorLampsOff(String floor) {
+		//Turn off Floor lamp at the floor it was requested at when elevator arrives at requested floor
+		Boolean[] b = floorLamps.get(Integer.parseInt(floor));
+		if(b[0]) {
+			b[0] = false;
+			System.out.println("Floor " + floor + " lamp UP turned off");
+		}
+		if(b[1]) {
+			b[1] = false;
+			System.out.println("Floor " + floor + " lamp DOWN turned off");
+		}
+	}
+	
+	
 
 	/**
 	 * Runs forever until the system exits, and communicates with the Schedular.
@@ -193,7 +235,8 @@ public class FloorSubsystem implements Runnable {
 				} catch (IOException e) {
 					e.printStackTrace();
 					System.exit(1);
-				} // Receive data from Scheduler
+				} 
+				// Receive data from Scheduler
 				String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 				String[] splitElevatorResponse = (new String(receivePacket.getData(), 0,
 						this.receivePacket.getLength())).split(" ");
@@ -247,6 +290,7 @@ public class FloorSubsystem implements Runnable {
 						- 1] = splitResponse;
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2]);
+					setFloorLampsOff(individualElevator[2]);
 					floorStatus = "go";
 				}
 			}

@@ -1,5 +1,6 @@
 package elevator;
 
+
 /**
  * Enum for the directions of the elevator
  * 
