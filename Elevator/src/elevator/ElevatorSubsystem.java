@@ -182,7 +182,7 @@ public class ElevatorSubsystem implements Runnable {
 			long y = Long.parseLong("3000000000");
 			long x = y * Math.abs(Integer.parseInt(this.cut[0]) - location);
 			if(System.nanoTime()  <= (x + time)){
-				if(System.nanoTime()  >= (y + time)){
+				if(System.nanoTime()  <= (y + time)){
 					if(this.cut[1].equals("UP")){
 						location++;
 					}
