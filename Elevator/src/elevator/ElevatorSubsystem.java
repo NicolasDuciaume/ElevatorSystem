@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class ElevatorSubsystem implements Runnable {
 
-	private String location; // current location of the elevator
+	private int location = 1; // current location of the elevator
 	private ElevatorStates currentState; // current state of the elevator
 	private Direction motorState; // The motor state is whether the elevator is moving
 	private Queue<FloorRequest> floorRequests; // Queue of requests that the elevator has to full fill
@@ -29,6 +29,8 @@ public class ElevatorSubsystem implements Runnable {
 	private String[] cut = new String[2];
 	private String name;
 	private static int countWaiting = 0;
+	private long time = 0;
+
 
 	/**
 	 * Instantiates the variables
@@ -165,20 +167,48 @@ public class ElevatorSubsystem implements Runnable {
 			this.cut = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
 			parseData(this.cut[1], "Direction");
 			currentState = ElevatorStates.STATE_2;
+			time = System.nanoTime();
 			break;
 		case STATE_2: // Elevator moving
 			// Turn on lamps
 			directionLamp = motorState;
 			parseData(this.cut[0], "Floor Number");
 			// Listen to request implementation
+			currentState = ElevatorStates.STATE_4;
 
-			currentState = ElevatorStates.STATE_3;
+			break;
+		case STATE_4:
+			long y = Long.parseLong("3000000000");
+			long x = y * Math.abs(Integer.parseInt(this.cut[0]) - location);
+			if(System.nanoTime()  <= (x + time)){
+				System.out.println("got here");
+				String msg = name + "-moving";
+				byte[] toSend = msg.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				currentState = ElevatorStates.STATE_4;
+			}
+			else{
+				currentState = ElevatorStates.STATE_3;
+			}
 			break;
 		case STATE_3: // reach destination
-			// TODO: Timer Event needed for future Iterations. Door open time
+
 			doorOpen = true;
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
+			location = Integer.parseInt(this.cut[0]);
 			String msg = name + "-arrived-" + this.cut[0];
 			byte[] toSend = msg.getBytes();
 			try {
@@ -252,8 +282,8 @@ public class ElevatorSubsystem implements Runnable {
 		INITIAL_STATE, // Elevator stopped with doors open
 		STATE_1, // Close doors
 		STATE_2, // Elevator moving
-		STATE_3; // Reach destination
-
+		STATE_3, // Reach destination
+		STATE_4;
 		private ElevatorStates() {
 		}
 	}

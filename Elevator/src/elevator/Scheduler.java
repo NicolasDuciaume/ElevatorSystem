@@ -121,7 +121,10 @@ public class Scheduler {
 		switch (currentState2) {
 		case STATE_1:
 			for(int i = 0; i <= maxElevator;i++){
-				receiveFromElevator(data);
+				boolean b = receiveFromElevator(data);
+				if(!b){
+					i--;
+				}
 			}
 			currentState2 = SchedulerStates.STATE_2;
 			break;
@@ -160,7 +163,7 @@ public class Scheduler {
 	 * @param data the info received from the elevator, either an arrival message or
 	 *             a button press
 	 */
-	public synchronized void receiveFromElevator(byte[] data) {
+	public synchronized boolean receiveFromElevator(byte[] data) {
 		ElevatorData temp = elevators.get(elevatorBeingUsed);
 		try {
 			sendReceiveSocketElevators.receive(receivePacket);
@@ -169,13 +172,30 @@ public class Scheduler {
 			System.exit(1);
 		}
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
+		System.out.println(name);
 
 		// Splits the message then compares to see what needs to be done
 		String[] splitElevatorMsg = name.split("-");
+		String[] test = mess.split(" ");
+		for(String tt: test){
+			String[] test2 = tt.split("-");
+			if(test2[0].equals(splitElevatorMsg[0])){
+				return false;
+			}
+		}
 		if (!splitElevatorMsg[1].equals("arrived")) { // if button pressed
-			if(!splitElevatorMsg[1].equals("waiting")){
+			if(splitElevatorMsg[1].equals("added")){
 			this.checkPriority(-1, null,Integer.parseInt(splitElevatorMsg[0]));}
 			else {
+				if(splitElevatorMsg[1].equals("moving")){
+					if(mess.equals("")){
+						mess = mess + splitElevatorMsg[0] + "-moving" ;
+					}
+					else {
+						mess = mess + " " + splitElevatorMsg[0] + "-moving" ;
+					}
+				}
+				else if(splitElevatorMsg[1].equals("waiting")){
 				waiting++;
 				if(mess.equals("")){
 					mess = mess + splitElevatorMsg[0] + "-waiting" ;
@@ -183,7 +203,7 @@ public class Scheduler {
 				else {
 					mess = mess + " " + splitElevatorMsg[0] + "-waiting" ;
 					waiting--;
-				}
+				}}
 			}
 		} else { // if arrived to floor
 			temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[2]));
@@ -196,7 +216,7 @@ public class Scheduler {
 			}
 		}
 		elevatorChange();
-
+		return true;
 	}
 
 	/**

@@ -249,11 +249,15 @@ public class FloorSubsystem implements Runnable {
 					this.setLampsSensors(individualElevator[2]);
 					floorStatus = "go";
 				}
+				else if (individualElevator[1].equals("moving")) {
+					floorStatus = "go";
+				}
 			}
 
 			String print = "";
 
 			for (String p : elevators) {
+				//System.out.println(p);
 				if (print.equals("")) {
 					print = p;
 				} else {
@@ -264,10 +268,11 @@ public class FloorSubsystem implements Runnable {
 			System.out.println("Floor received: " + print);
 
 			boolean elevatorWait = true;
+
 			for (int i = 0; i < numOfElevators; i++) {
 				String splitResponse = splitElevatorResponse[i];
 				String[] individualElevator = splitResponse.split("-");
-				if (individualElevator[1].equals("waiting")) {
+				if (individualElevator[1].equals("waiting") || individualElevator[1].equals("moving")) {
 					elevatorWait = false;
 				}
 			}
@@ -312,6 +317,9 @@ public class FloorSubsystem implements Runnable {
 						this.setLampsSensors(individualElevator[2]);
 						floorStatus = "go";
 					}
+					else if (individualElevator[1].equals("moving")) {
+						floorStatus = "go";
+					}
 				}
 
 				print = "";
@@ -328,10 +336,11 @@ public class FloorSubsystem implements Runnable {
 				for (int x = 0; x < numOfElevators; x++) {
 					String t = splitElevatorResponse[x];
 					String[] individualElevator = t.split("-");
-					if (individualElevator[1].equals("waiting")) {
+					if (individualElevator[1].equals("waiting") || individualElevator[1].equals("moving")) {
 						elevatorWait = false;
 					}
 				}
+				System.out.println(elevatorWait);
 				System.out.println("Floor received: " + toPrint);
 			}
 			listofRequests.remove(0);
