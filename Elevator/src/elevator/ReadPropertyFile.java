@@ -48,7 +48,7 @@ public class ReadPropertyFile {
 	 * @return
 	 */
 	public int getTimeToOpenCloseDoors() {
-		return Integer.parseInt(this.property.getProperty("time_open_close_doors"));
+		return Integer.parseInt(this.property.getProperty("time_open_close_doors_ms"));
 	}
 	
 	/**
@@ -56,7 +56,7 @@ public class ReadPropertyFile {
 	 * @return
 	 */
 	public int getTimeBetweenFloors() {
-		return Integer.parseInt(this.property.getProperty("time_between_floors"));
+		return Integer.parseInt(this.property.getProperty("time_between_floors_ms"));
 	}
 
 

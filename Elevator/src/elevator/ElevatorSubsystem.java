@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class ElevatorSubsystem implements Runnable {
 
-	private String location; // current location of the elevator
+	private int currFloor, destFloor; // current location of the elevator
 	private ElevatorStates currentState; // current state of the elevator
 	private Direction motorState; // The motor state is whether the elevator is moving
 	private Queue<FloorRequest> floorRequests; // Queue of requests that the elevator has to full fill
@@ -29,6 +29,10 @@ public class ElevatorSubsystem implements Runnable {
 	private String[] cut = new String[2];
 	private String name;
 	private static int countWaiting = 0;
+	
+	private static ReadPropertyFile r = new ReadPropertyFile();
+	private static int time_open_close_doors = r.getTimeToOpenCloseDoors();
+	private static int time_between_floors = r.getTimeBetweenFloors();
 
 	/**
 	 * Instantiates the variables
@@ -42,6 +46,8 @@ public class ElevatorSubsystem implements Runnable {
 		doorOpen = true;
 		floorRequests = new PriorityQueue<FloorRequest>();
 		elevatorLamps = new boolean[8];
+		currFloor = 0;
+		destFloor = 0;
 
 		try {
 			sendReceiveSocket = new DatagramSocket();
@@ -102,15 +108,23 @@ public class ElevatorSubsystem implements Runnable {
 		// TODO: If there is a request while elevator is moving to a targeted floor
 		// direction will have to be adjusted depending on the request
 		if (type.equals("Direction")) {
-			if (direction.equals("UP")) {
-				motorState = Direction.UP;
-			} else if (direction.equals("DOWN")) {
-				motorState = Direction.DOWN;
+//			if (direction.equals("UP")) {
+//				motorState = Direction.UP;
+//			} else if (direction.equals("DOWN")) {
+//				motorState = Direction.DOWN;
+//			}
+			if(this.currFloor < this.destFloor) {
+				this.motorState = Direction.UP;
+			} else if (this.currFloor > this.destFloor){
+				this.motorState = Direction.DOWN;
+			} else {
+				this.motorState = Direction.STOPPED;
 			}
 		}
 
 		if (type.equals("Floor Number")) {
 			this.elevatorLamps[Integer.parseInt(direction) - 1] = true;
+			this.destFloor = Integer.parseInt(direction);
 		}
 
 	}
@@ -161,7 +175,15 @@ public class ElevatorSubsystem implements Runnable {
 		case STATE_1: // doors close
 			// TODO: Timer Event needed for future Iterations. Door open time,
 			// movement time between floors.
+			System.out.println(this.name + " door is closing");
+			try {
+				Thread.sleep((long) time_open_close_doors); // elevator doors are closing
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			doorOpen = false;
+			System.out.println(this.name + " door closed");
 			this.cut = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
 			parseData(this.cut[1], "Direction");
 			currentState = ElevatorStates.STATE_2;
@@ -170,15 +192,54 @@ public class ElevatorSubsystem implements Runnable {
 			// Turn on lamps
 			directionLamp = motorState;
 			parseData(this.cut[0], "Floor Number");
+			parseData(this.cut[1], "Direction");
 			// Listen to request implementation
-
+			
+			//loop through each floor until destination is reached
+			System.out.println("currFloor: " + this.currFloor);
+			System.out.println("destFloor: " + this.destFloor);
+			System.out.println("motorState: " + this.motorState);
+			while(this.currFloor != this.destFloor) {
+				if(this.motorState == Direction.UP) {
+					try {
+						Thread.sleep((long) time_between_floors); // elevator is moving between floors
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					this.currFloor++;
+					System.out.println(this.name + " moving; currently at floor " + this.currFloor);
+				} else if(this.motorState == Direction.DOWN){
+					try {
+						Thread.sleep((long) time_between_floors); // elevator is moving between floors
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					this.currFloor--;
+					System.out.println(this.name + " moving; currently at floor " + this.currFloor);
+				}
+			}
+			// Changing states once elevator has finished moving
 			currentState = ElevatorStates.STATE_3;
 			break;
 		case STATE_3: // reach destination
 			// TODO: Timer Event needed for future Iterations. Door open time
-			doorOpen = true;
+			System.out.println(this.name + " destination reached");
 			motorState = Direction.STOPPED;
 			directionLamp = motorState;
+			
+			System.out.println(this.name + " door is opening");
+			try {
+				Thread.sleep((long) time_open_close_doors); // elevator doors are closing
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			doorOpen = true;
+			System.out.println(this.name + " door open");
+			
 			String msg = name + "-arrived-" + this.cut[0];
 			byte[] toSend = msg.getBytes();
 			try {
@@ -264,10 +325,10 @@ public class ElevatorSubsystem implements Runnable {
 	 */
 	public static void main(String[] args) {
 
-		ReadPropertyFile r = new ReadPropertyFile();
+//		ReadPropertyFile r = new ReadPropertyFile();
 
 		Thread elevatorThreads[] = new Thread[r.getNumElevators()];
-
+		
 		for (int i = 0; i < r.getNumElevators(); i++) {
 			elevatorThreads[i] = new Thread(new ElevatorSubsystem("Elevator" + (i + 1)), "Elevator" + (i + 1));
 			elevatorThreads[i].start();
