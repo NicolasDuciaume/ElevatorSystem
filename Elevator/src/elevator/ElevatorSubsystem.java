@@ -30,6 +30,7 @@ public class ElevatorSubsystem implements Runnable {
 	private String name;
 	private static int countWaiting = 0;
 	private long time = 0;
+	private long time2 = 0;
 	private int moving = 1;
 	private int currFloor, destFloor;
 
@@ -42,6 +43,7 @@ public class ElevatorSubsystem implements Runnable {
 	 */
 	public ElevatorSubsystem(String name) {
 		// this.scheduler = scheduler;
+		System.out.println(time_open_close_doors);
 		this.name = name;
 		currentState = ElevatorStates.INITIAL_STATE;
 		motorState = Direction.STOPPED;
@@ -178,6 +180,21 @@ public class ElevatorSubsystem implements Runnable {
 
 				this.packetString = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
 				parseData(this.packetString[1], "Direction");
+				String msg1 = name + "-door_closed";
+				byte[] toSend1 = msg1.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
 				currentState = ElevatorStates.STATE_2;
 				time = System.nanoTime();
 			} else {
@@ -207,19 +224,22 @@ public class ElevatorSubsystem implements Runnable {
 			parseData(this.packetString[1], "Direction");
 			// Listen to request implementation
 			currentState = ElevatorStates.STATE_3;
-
+			time = System.nanoTime();
+			time2 = System.nanoTime();
 			break;
 		case STATE_3: // Elevator moving
 			long x = time_between_floors * Math.abs(this.destFloor - this.currFloor);
 			if(System.nanoTime()  <= (x + time)){
 				long currTime = System.nanoTime();
 				
-				if(currTime  >= (time_between_floors + time)){
-					if(this.motorState == Direction.UP){
+				if(currTime - time2 >= time_between_floors){
+					if(this.currFloor < this.destFloor){
 						this.currFloor++;
+						time2 = System.nanoTime();
 					}
-					else if(this.motorState == Direction.DOWN){
+					else if(this.currFloor > this.destFloor){
 						this.currFloor--;
+						time2 = System.nanoTime();
 					}
 					
 				}

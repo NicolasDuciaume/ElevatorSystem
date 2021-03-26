@@ -200,6 +200,28 @@ public class Scheduler {
 						}
 					}
 				}
+				else {
+					if (test2[1].equals("moving") && splitElevatorMsg[1].equals("moving")) {
+						if (Integer.parseInt(test2[2]) != Integer.parseInt(splitElevatorMsg[2])) {
+							mess = "";
+							for (String tt2 : test) {
+								if (tt2.equals(tt)) {
+									if (mess.equals("")) {
+										mess = mess + name;
+									} else {
+										mess = mess + " " + name;
+									}
+								} else {
+									if (mess.equals("")) {
+										mess = mess + tt2;
+									} else {
+										mess = mess + " " + tt2;
+									}
+								}
+							}
+						}
+					}
+				}
 				return false;
 			}
 		}
@@ -229,6 +251,15 @@ public class Scheduler {
 						mess = mess + " " + splitElevatorMsg[0] + "-door_closing";
 						waiting--;
 					}
+
+				}else if (splitElevatorMsg[1].equals("door_closed")) {
+					if (mess.equals("")) {
+						mess = mess + splitElevatorMsg[0] + "-door_closed";
+					} else {
+						mess = mess + " " + splitElevatorMsg[0] + "-door_closed";
+						waiting--;
+					}
+
 				} else if (splitElevatorMsg[1].equals("door_opening")) {
 					if (mess.equals("")) {
 						mess = mess + splitElevatorMsg[0] + "-door_opening";

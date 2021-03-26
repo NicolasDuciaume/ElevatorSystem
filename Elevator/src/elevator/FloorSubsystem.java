@@ -228,6 +228,9 @@ public class FloorSubsystem implements Runnable {
 					.split(" ");
 
 			String[] elevators = new String[numOfElevators];
+			/*for(String s : elevators){
+				System.out.println(s);
+			}*/
 			for (int i = 0; i < numOfElevators; i++) {
 				String splitResponse = splitElevatorResponse[i];
 				String[] individualElevator = splitResponse.split("-");
@@ -241,6 +244,9 @@ public class FloorSubsystem implements Runnable {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("door_closing")) {
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("door_closed")) {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("door_opening")) {
@@ -313,6 +319,9 @@ public class FloorSubsystem implements Runnable {
 						floorStatus = "go";
 					}
 					if (individualElevator[1].equals("door_closing")) {
+						floorStatus = "go";
+					}
+					if (individualElevator[1].equals("door_closed")) {
 						floorStatus = "go";
 					}
 					if (individualElevator[1].equals("door_opening")) {
@@ -393,6 +402,9 @@ public class FloorSubsystem implements Runnable {
 			if (individualElevator[1].equals("door_closing")) {
 				floorStatus = "go";
 			}
+			if (individualElevator[1].equals("door_closed")) {
+				floorStatus = "go";
+			}
 			if (individualElevator[1].equals("door_opening")) {
 				floorStatus = "go";
 			}
@@ -463,6 +475,9 @@ public class FloorSubsystem implements Runnable {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("door_closing")) {
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("door_closed")) {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("door_opening")) {
