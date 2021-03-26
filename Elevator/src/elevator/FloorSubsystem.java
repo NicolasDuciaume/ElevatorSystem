@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner; //Import this class to accept input
 
 /**
@@ -28,6 +30,7 @@ public class FloorSubsystem implements Runnable {
 	private int lastRequest;
 	private int numOfElevators = 0;
 	public int requestCount = 0;
+	private Map<Integer,Boolean[]> floorLamps; 
 
 	private static ReadPropertyFile r = new ReadPropertyFile();
 
@@ -40,6 +43,12 @@ public class FloorSubsystem implements Runnable {
 	public FloorSubsystem(String FileLocation) {
 		// this.scheduler = scheduler;
 		this.listofRequests = new ArrayList<FloorRequest>();
+		floorLamps = new HashMap<Integer,Boolean[]>();
+		for(int i = 0; i < r.getNumFloors(); i++) {
+			Boolean[] b = {false,false};
+			floorLamps.put(i+1, b);
+		}
+		
 		this.addFloorRequest(FileLocation);
 		FloorRequest floorRequest = listofRequests.get(listofRequests.size() - 1);
 		this.lastRequest = floorRequest.getFloorDestination();
@@ -106,11 +115,14 @@ public class FloorSubsystem implements Runnable {
 				this.data = myReader.nextLine();
 				String[] requestArray = this.data.split(" ");
 				String direction = requestArray[2];
+				Boolean[] currLampStatus = floorLamps.get(Integer.parseInt(requestArray[1]));
 				Direction requestDirection;
 				if (direction.equals("Up")) {
+					currLampStatus[0] = true;
 					requestDirection = Direction.UP;
 				} else if (direction.equals("Down")) {
 					requestDirection = Direction.DOWN;
+					currLampStatus[1] = true;
 				} else {
 					requestDirection = Direction.STOPPED;
 				}
@@ -130,6 +142,19 @@ public class FloorSubsystem implements Runnable {
 
 	// TODO: Turn Lamps, buttons etc on
 	public void setLampsSensors(String floor) {
+	}
+	
+	private void setFloorLampsOff(String floor) {
+		//Turn off Floor lamp at the floor it was requested at when elevator arrives at requested floor
+		Boolean[] b = floorLamps.get(Integer.parseInt(floor));
+		if(b[0]) {
+			b[0] = false;
+			System.out.println("Floor " + floor + " lamp UP turned off");
+		}
+		if(b[1]) {
+			b[1] = false;
+			System.out.println("Floor " + floor + " lamp DOWN turned off");
+		}
 	}
 
 	/**
@@ -238,6 +263,8 @@ public class FloorSubsystem implements Runnable {
 						- 1] = splitResponse;
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2]);
+					//Turn off floor lamp when elevator reaches requested floor
+					setFloorLampsOff(individualElevator[2]);
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("moving")) {
@@ -313,6 +340,8 @@ public class FloorSubsystem implements Runnable {
 							- 1] = splitResponse;
 					if (individualElevator[1].equals("arrived")) {
 						this.setLampsSensors(individualElevator[2]);
+						//Turn off floor lamp when elevator reaches requested floor
+						setFloorLampsOff(individualElevator[2]);
 						floorStatus = "go";
 					}
 					if (individualElevator[1].equals("moving")) {
@@ -394,6 +423,8 @@ public class FloorSubsystem implements Runnable {
 					- 1] = splitResponse;
 			if (individualElevator[1].equals("arrived")) {
 				this.setLampsSensors(individualElevator[2]);
+				//Turn off floor lamp when elevator reaches requested floor
+				setFloorLampsOff(individualElevator[2]);
 				floorStatus = "go";
 			}
 			if (individualElevator[1].equals("moving")) {
@@ -469,6 +500,8 @@ public class FloorSubsystem implements Runnable {
 						- 1] = splitResponse;
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2]);
+					//Turn off floor lamp when elevator reaches requested floor
+					setFloorLampsOff(individualElevator[2]);
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("moving")) {
