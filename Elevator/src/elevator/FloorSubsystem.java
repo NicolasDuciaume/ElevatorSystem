@@ -282,6 +282,8 @@ public class FloorSubsystem implements Runnable {
 					.split(" ");
 
 			String[] elevators = new String[numOfElevators];
+			//Used count so elevator can finish its current request before setting floor lamp off
+			int count = 0;
 			for (int i = 0; i < numOfElevators; i++) {
 				String splitResponse = splitElevatorResponse[i];
 				// System.out.println(t);
@@ -290,7 +292,13 @@ public class FloorSubsystem implements Runnable {
 						- 1] = splitResponse;
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2]);
-					setFloorLampsOff(individualElevator[2]);
+					//Turn off floor lamp when elevator reaches requested floor
+					if(count < 1) {
+						setFloorLampsOff(individualElevator[2]);
+						count++;
+					}else {
+						count = 0;
+					}
 					floorStatus = "go";
 				}
 			}
