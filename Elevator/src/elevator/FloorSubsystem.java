@@ -338,7 +338,7 @@ public class FloorSubsystem implements Runnable {
 						elevatorWait = false;
 					}
 				}
-				System.out.println("Floor received: " + toPrint);
+				System.out.println("Floor received: " + print);
 			}
 			listofRequests.remove(0);
 		}
@@ -488,7 +488,7 @@ public class FloorSubsystem implements Runnable {
 					elevatorWait = false;
 				}
 			}
-			System.out.println("Floor received: " + toPrint);
+			System.out.println("Floor received: " + print);
 		}
 	}
 	/**
