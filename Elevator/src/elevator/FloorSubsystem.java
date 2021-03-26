@@ -29,6 +29,8 @@ public class FloorSubsystem implements Runnable {
 	private int numOfElevators = 0;
 	public int requestCount = 0;
 
+	private static ReadPropertyFile r = new ReadPropertyFile();
+
 	/**
 	 * Instantiates all the variables and tries to find and read the input file
 	 *
@@ -52,7 +54,7 @@ public class FloorSubsystem implements Runnable {
 	public void Initialize() {
 		byte[] toSend = new byte[100];
 		try {
-			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getFloorPort());
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -172,7 +174,7 @@ public class FloorSubsystem implements Runnable {
 			String status = "go";
 			byte[] toSend = status.getBytes();
 			try {
-				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getFloorPort());
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -197,7 +199,7 @@ public class FloorSubsystem implements Runnable {
 			String floorRequestData = floorRequest.toString();
 			byte[] toSend = floorRequestData.getBytes();
 			try {
-				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getFloorPort());
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -228,7 +230,6 @@ public class FloorSubsystem implements Runnable {
 			String[] elevators = new String[numOfElevators];
 			for (int i = 0; i < numOfElevators; i++) {
 				String splitResponse = splitElevatorResponse[i];
-				// System.out.println(t);
 				String[] individualElevator = splitResponse.split("-");
 				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
 						- 1] = splitResponse;
@@ -237,6 +238,12 @@ public class FloorSubsystem implements Runnable {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("moving")) {
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("door_closing")) {
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("door_opening")) {
 					floorStatus = "go";
 				}
 			}
@@ -265,7 +272,7 @@ public class FloorSubsystem implements Runnable {
 			while (elevatorWait) {
 				byte[] toSend2 = floorStatus.getBytes();
 				try {
-					this.sendPacket = new DatagramPacket(toSend2, toSend2.length, InetAddress.getLocalHost(), 69);
+					this.sendPacket = new DatagramPacket(toSend2, toSend2.length, InetAddress.getLocalHost(), r.getFloorPort());
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 					System.exit(1);
@@ -305,6 +312,12 @@ public class FloorSubsystem implements Runnable {
 					if (individualElevator[1].equals("moving")) {
 						floorStatus = "go";
 					}
+					if (individualElevator[1].equals("door_closing")) {
+						floorStatus = "go";
+					}
+					if (individualElevator[1].equals("door_opening")) {
+						floorStatus = "go";
+					}
 				}
 
 				print = "";
@@ -336,7 +349,7 @@ public class FloorSubsystem implements Runnable {
 		String floorRequestData = wait.toString();
 		byte[] toSend = floorRequestData.getBytes();
 		try {
-			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 69);
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getFloorPort());
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -367,7 +380,6 @@ public class FloorSubsystem implements Runnable {
 		String[] elevators = new String[numOfElevators];
 		for (int i = 0; i < numOfElevators; i++) {
 			String splitResponse = splitElevatorResponse[i];
-			// System.out.println(t);
 			String[] individualElevator = splitResponse.split("-");
 			elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
 					- 1] = splitResponse;
@@ -376,6 +388,12 @@ public class FloorSubsystem implements Runnable {
 				floorStatus = "go";
 			}
 			if (individualElevator[1].equals("moving")) {
+				floorStatus = "go";
+			}
+			if (individualElevator[1].equals("door_closing")) {
+				floorStatus = "go";
+			}
+			if (individualElevator[1].equals("door_opening")) {
 				floorStatus = "go";
 			}
 		}
@@ -404,7 +422,7 @@ public class FloorSubsystem implements Runnable {
 		while (elevatorWait) {
 			byte[] toSend2 = floorStatus.getBytes();
 			try {
-				this.sendPacket = new DatagramPacket(toSend2, toSend2.length, InetAddress.getLocalHost(), 69);
+				this.sendPacket = new DatagramPacket(toSend2, toSend2.length, InetAddress.getLocalHost(), r.getFloorPort());
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 				System.exit(1);
@@ -442,6 +460,12 @@ public class FloorSubsystem implements Runnable {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("moving")) {
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("door_closing")) {
+					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("door_opening")) {
 					floorStatus = "go";
 				}
 			}

@@ -14,6 +14,7 @@ import java.util.Properties;
  */
 public class ReadPropertyFile {
 	Properties property;
+	private static final long NANOSEC = 1000000000;
 	
 	public ReadPropertyFile() {
 		property = new Properties();
@@ -26,7 +27,23 @@ public class ReadPropertyFile {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public int getFloorPort() {
+		return Integer.parseInt(this.property.getProperty("floor_port"));
+	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public int getElevatorPort() {
+		return Integer.parseInt(this.property.getProperty("elevator_port"));
+	}
+		
 	/**
 	 * 
 	 * @return
@@ -47,16 +64,16 @@ public class ReadPropertyFile {
 	 * 
 	 * @return
 	 */
-	public int getTimeToOpenCloseDoors() {
-		return Integer.parseInt(this.property.getProperty("time_open_close_doors"));
+	public long getTimeToOpenCloseDoors() {
+		return Long.parseLong(this.property.getProperty("time_open_close_doors_sec")) * NANOSEC;
 	}
 	
 	/**
 	 * 
 	 * @return
 	 */
-	public int getTimeBetweenFloors() {
-		return Integer.parseInt(this.property.getProperty("time_between_floors"));
+	public long getTimeBetweenFloors() {
+		return Long.parseLong(this.property.getProperty("time_between_floors_sec")) * NANOSEC;
 	}
 
 

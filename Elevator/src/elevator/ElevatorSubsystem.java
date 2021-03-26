@@ -26,12 +26,16 @@ public class ElevatorSubsystem implements Runnable {
 	private Scheduler scheduler; // Scheduler object used to receive and pass data
 	private DatagramPacket sendPacket, receivePacket;
 	private DatagramSocket sendReceiveSocket;
-	private String[] cut = new String[2];
+	private String[] packetString = new String[2];
 	private String name;
 	private static int countWaiting = 0;
 	private long time = 0;
 	private int moving = 1;
+	private int currFloor, destFloor;
 
+	private static ReadPropertyFile r = new ReadPropertyFile();
+	private static long time_open_close_doors = r.getTimeToOpenCloseDoors();
+	private static long time_between_floors = r.getTimeBetweenFloors();
 
 	/**
 	 * Instantiates the variables
@@ -44,7 +48,9 @@ public class ElevatorSubsystem implements Runnable {
 		data = new FloorRequest();
 		doorOpen = true;
 		floorRequests = new PriorityQueue<FloorRequest>();
-		elevatorLamps = new boolean[8];
+		elevatorLamps = new boolean[r.getNumFloors()];
+		currFloor = 1;
+		destFloor = 0;
 
 		try {
 			sendReceiveSocket = new DatagramSocket();
@@ -59,8 +65,7 @@ public class ElevatorSubsystem implements Runnable {
 		}
 
 		// Initializing the buttons
-		// TODO make number of buttons configurable
-		elevatorButtons = new int[8];
+		elevatorButtons = new int[r.getNumFloors()];
 		for (int i = 0; i < this.elevatorButtons.length; ++i) {
 			elevatorButtons[i] = i + 1;
 		}
@@ -77,7 +82,7 @@ public class ElevatorSubsystem implements Runnable {
 
 		toSend = this.name.getBytes();
 		try {
-			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+			this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -105,15 +110,18 @@ public class ElevatorSubsystem implements Runnable {
 		// TODO: If there is a request while elevator is moving to a targeted floor
 		// direction will have to be adjusted depending on the request
 		if (type.equals("Direction")) {
-			if (direction.equals("UP")) {
-				motorState = Direction.UP;
-			} else if (direction.equals("DOWN")) {
-				motorState = Direction.DOWN;
+			if(this.currFloor < this.destFloor) {
+				this.motorState = Direction.UP;
+			} else if (this.currFloor > this.destFloor){
+				this.motorState = Direction.DOWN;
+			} else {
+				this.motorState = Direction.STOPPED;
 			}
 		}
 
 		if (type.equals("Floor Number")) {
 			this.elevatorLamps[Integer.parseInt(direction) - 1] = true;
+			this.destFloor = Integer.parseInt(direction);
 		}
 
 	}
@@ -141,7 +149,7 @@ public class ElevatorSubsystem implements Runnable {
 				String elevatorWithRequest = name + "-" + receivePacketData;
 				byte[] toSend = elevatorWithRequest.getBytes();
 				try {
-					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 					System.exit(1);
@@ -160,41 +168,114 @@ public class ElevatorSubsystem implements Runnable {
 				currentState = ElevatorStates.STATE_1;
 				countWaiting = 0;
 			}
-			break;
-		case STATE_1: // doors close
-			// TODO: Timer Event needed for future Iterations. Door open time,
-			// movement time between floors.
-			doorOpen = false;
-			this.cut = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
-			parseData(this.cut[1], "Direction");
-			currentState = ElevatorStates.STATE_2;
 			time = System.nanoTime();
 			break;
-		case STATE_2: // Elevator moving
+		case STATE_1: // doors close			
+			if(System.nanoTime() >= (time_open_close_doors + time)){
+				doorOpen = false;
+				
+				System.out.println(name + " door closed");
+
+				this.packetString = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
+				parseData(this.packetString[1], "Direction");
+				currentState = ElevatorStates.STATE_2;
+				time = System.nanoTime();
+			} else {
+				System.out.println(name + " door closing");
+				String msg1 = name + "-door_closing";
+				byte[] toSend1 = msg1.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				currentState = ElevatorStates.STATE_1;
+			}
+			break;
+		case STATE_2: // Transition to moving
 			// Turn on lamps
 			directionLamp = motorState;
-			parseData(this.cut[0], "Floor Number");
+			parseData(this.packetString[0], "Floor Number");
+			parseData(this.packetString[1], "Direction");
 			// Listen to request implementation
-			currentState = ElevatorStates.STATE_4;
+			currentState = ElevatorStates.STATE_3;
 
 			break;
-		case STATE_4:
-			long y = Long.parseLong("3000000000");
-			long x = y * Math.abs(Integer.parseInt(this.cut[0]) - location);
+		case STATE_3: // Elevator moving
+			long x = time_between_floors * Math.abs(this.destFloor - this.currFloor);
 			if(System.nanoTime()  <= (x + time)){
-				if(System.nanoTime()  <= (y + time)){
-					if(this.cut[1].equals("UP")){
-						location++;
+				long currTime = System.nanoTime();
+				
+				if(currTime  >= (time_between_floors + time)){
+					if(this.motorState == Direction.UP){
+						this.currFloor++;
 					}
-					else if(this.cut[1].equals("DOWN")){
-						location--;
+					else if(this.motorState == Direction.DOWN){
+						this.currFloor--;
 					}
+					
 				}
-				System.out.println("got here");
-				String msg = name + "-moving-" + location;
+				String msg = name + "-moving-" + this.currFloor;
 				byte[] toSend = msg.getBytes();
 				try {
-					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
+					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				currentState = ElevatorStates.STATE_3;
+			}
+			else{
+				time = System.nanoTime(); // reset time before switching states
+				currentState = ElevatorStates.STATE_4;
+			}
+			break;
+		case STATE_4: // reach destination
+			
+			if(System.nanoTime() >= (time_open_close_doors + time)){
+				doorOpen = true;
+				motorState = Direction.STOPPED;
+				directionLamp = motorState;
+				location = Integer.parseInt(this.packetString[0]);
+				String msg = name + "-arrived-" + this.packetString[0];
+				byte[] toSend = msg.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				
+				System.out.println(this.name + " Sent: " + msg);
+				currentState = ElevatorStates.INITIAL_STATE;
+			} else {
+				System.out.println(name + " door opening");
+				String msg1 = name + "-door_opening";
+				byte[] toSend1 = msg1.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 					System.exit(1);
@@ -208,35 +289,7 @@ public class ElevatorSubsystem implements Runnable {
 				}
 				currentState = ElevatorStates.STATE_4;
 			}
-			else{
-				currentState = ElevatorStates.STATE_3;
-			}
-			break;
-		case STATE_3: // reach destination
-
-			doorOpen = true;
-			motorState = Direction.STOPPED;
-			directionLamp = motorState;
-			location = Integer.parseInt(this.cut[0]);
-			String msg = name + "-arrived-" + this.cut[0];
-			byte[] toSend = msg.getBytes();
-			try {
-				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), 420);
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
-
-			try {
-				this.sendReceiveSocket.send(this.sendPacket);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
-			// scheduler.receiveStateMachine(null, msg); // Send data from elevator to
-			// Scheduler
-			System.out.println(this.name + " Sent: " + msg);
-			currentState = ElevatorStates.INITIAL_STATE;
+			
 			break;
 		}
 	}
@@ -303,7 +356,7 @@ public class ElevatorSubsystem implements Runnable {
 	 */
 	public static void main(String[] args) {
 
-		ReadPropertyFile r = new ReadPropertyFile();
+//		ReadPropertyFile r = new ReadPropertyFile();
 
 		Thread elevatorThreads[] = new Thread[r.getNumElevators()];
 
