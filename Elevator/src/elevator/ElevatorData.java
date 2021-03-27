@@ -42,6 +42,7 @@ public class ElevatorData {
         direction = Direction.STOPPED;
         r = new ReadPropertyFile();
         this.error = 0;
+	this.elevatorLampArray = new boolean[r.getNumFloors()]; 
         for (int i = 0; i < r.getNumFloors(); i++) {
 			elevatorLampArray[i] = false;
 		}
