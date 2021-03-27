@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
   <component name="EclipseModuleManager">
-    <libelement value="file://$MODULE_DIR$/../../Users/anwar_tmk/.p2/pool/plugins/org.junit.jupiter.api_5.5.1.v20190826-0900.jar" />
+    <libelement value="file://C:/Users/anwar_tmk/.p2/pool/plugins/org.junit.jupiter.api_5.5.1.v20190826-0900.jar" />
     <src_description expected_position="0">
       <src_folder value="file://$MODULE_DIR$/src" expected_position="0" />
     </src_description>
@@ -11,6 +11,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/src/elevatorTests" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
@@ -26,7 +27,7 @@
     <orderEntry type="module-library">
       <library name="org.junit.jupiter.api_5.5.1.v20190826-0900.jar">
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../Users/anwar_tmk/.p2/pool/plugins/org.junit.jupiter.api_5.5.1.v20190826-0900.jar" />
+          <root url="file://C:/Users/anwar_tmk/.p2/pool/plugins/org.junit.jupiter.api_5.5.1.v20190826-0900.jar" />
         </CLASSES>
         <JAVADOC>
           <root url="http://junit.org/junit5/docs/current/api/" />

@@ -238,16 +238,16 @@ public class ElevatorSubsystem implements Runnable {
 				
 				if(currTime - time2 >= time_between_floors){
 					if(this.currFloor < this.destFloor){
-						this.currFloor++;
+						location++;
 						time2 = System.nanoTime();
 					}
 					else if(this.currFloor > this.destFloor){
-						this.currFloor--;
+						location--;
 						time2 = System.nanoTime();
 					}
 					
 				}
-				String msg = name + "-moving-" + this.currFloor;
+				String msg = name + "-moving-" + (location + 1);
 				byte[] toSend = msg.getBytes();
 				try {
 					this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
@@ -275,7 +275,7 @@ public class ElevatorSubsystem implements Runnable {
 				doorOpen = true;
 				motorState = Direction.STOPPED;
 				directionLamp = motorState;
-				location = Integer.parseInt(this.packetString[0]);
+				this.currFloor = Integer.parseInt(this.packetString[0]);
 				String msg = name + "-arrived-" + this.packetString[0];
 				byte[] toSend = msg.getBytes();
 				try {
