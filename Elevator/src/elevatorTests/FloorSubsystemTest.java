@@ -1,6 +1,10 @@
 package elevatorTests;
 
 import junit.framework.TestCase;
+
+import java.util.ArrayList;
+import java.util.Map;
+
 import elevator.*;
 
 /**
@@ -35,7 +39,39 @@ public class FloorSubsystemTest extends TestCase {
 		assertEquals(2, floor.getListOfRequests().size());
 	}
 
-//	public void testSetLampsSensors() {
-//		fail("Not yet implemented");
-//	}
+	/**
+	 * Tests that the appropriate lamp sensor is set
+	 * Testing with elevator 1
+	 */
+	public void testSetLampsSensors() {
+		// All lamps and sensors should start in off state
+		String elevator = "Elevator2";
+		int elevatorIndex = 1;
+		int floorNum = 2;
+		Map<Integer, ArrayList<Boolean>> sensors = floor.getArrivalSensors();
+		ArrayList<Boolean> lamps = sensors.get(floorNum);
+		boolean sensorOn = lamps.get(elevatorIndex);
+		
+		// Check that sensor is off
+		assertEquals(false, sensorOn);
+		
+		floor.setLampsSensors("2", elevator, true);
+		
+		sensors = floor.getArrivalSensors();
+		lamps = sensors.get(floorNum);
+		sensorOn = lamps.get(elevatorIndex);
+		
+		// Check that sensor is on
+		assertEquals(true, sensorOn);
+		
+		// Turning sensor off
+		floor.setLampsSensors("2", elevator, false);
+		
+		sensors = floor.getArrivalSensors();
+		lamps = sensors.get(floorNum);
+		sensorOn = lamps.get(elevatorIndex);
+		
+		// Check that sensor is on
+		assertEquals(false, sensorOn);
+	}
 }

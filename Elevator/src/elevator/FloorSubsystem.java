@@ -619,13 +619,28 @@ public class FloorSubsystem implements Runnable {
         }
     }
 
+    /*
+     * Getters for Unit Testing
+     */
     /**
-     * Getter for Unit Testing
-     *
      * @return listOfRequests
      */
     public ArrayList<FloorRequest> getListOfRequests() {
         return this.listofRequests;
+    }
+    
+    /**
+     * @return arrivalSensors
+     */
+    public Map<Integer, ArrayList<Boolean>> getArrivalSensors() {
+        return this.arrivalSensors;
+    }
+    
+    /**
+     * @return floorLamps
+     */
+    public Map<Integer, Boolean[]> getFloorLamps() {
+        return this.floorLamps;
     }
 
     public static void main(String[] args) {
