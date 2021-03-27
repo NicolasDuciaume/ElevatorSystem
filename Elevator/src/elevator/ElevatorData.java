@@ -20,7 +20,9 @@ public class ElevatorData {
     private int currentFloor;
     private Direction direction;
     private ReadPropertyFile r;
+    private boolean elevatorLampArray[];
     private int error;
+    
 
     /**
      * Initializes all variables
@@ -40,6 +42,9 @@ public class ElevatorData {
         direction = Direction.STOPPED;
         r = new ReadPropertyFile();
         this.error = 0;
+        for (int i = 0; i < r.getNumFloors(); i++) {
+			elevatorLampArray[i] = false;
+		}
     }
 
     /**
@@ -178,4 +183,13 @@ public class ElevatorData {
         Collections.sort(this.downQueue);
         Collections.reverse(this.downQueue);
     }
+    public void setElevatorLamps(boolean add, int floornum) {
+		if (add) {
+			this.elevatorLampArray[floornum-1] = true;
+		}
+		else {
+			this.elevatorLampArray[floornum-1] = false;
+		}
+		
+	}
 }
