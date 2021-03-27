@@ -124,22 +124,33 @@ public class FloorSubsystem implements Runnable {
 
 			while (myReader.hasNextLine()) {
 				this.data = myReader.nextLine();
+				FloorRequest request = new FloorRequest();
 				String[] requestArray = this.data.split(" ");
-				String direction = requestArray[2];
-				Boolean[] currLampStatus = floorLamps.get(Integer.parseInt(requestArray[1]));
-				Direction requestDirection;
-				if (direction.equals("Up")) {
-					currLampStatus[0] = true;
-					requestDirection = Direction.UP;
-				} else if (direction.equals("Down")) {
-					requestDirection = Direction.DOWN;
-					currLampStatus[1] = true;
-				} else {
-					requestDirection = Direction.STOPPED;
+				if(requestArray[0].equals("error")){
+					if(requestArray[1].equals("doorStuck")){
+						request.setFloorDestination(-1);
+					}
+					else if(requestArray[1].equals("floorStuck")){
+						request.setFloorDestination(-2);
+					}
 				}
+				else{
+					String direction = requestArray[2];
+					Boolean[] currLampStatus = floorLamps.get(Integer.parseInt(requestArray[1]));
+					Direction requestDirection;
+					if (direction.equals("Up")) {
+						currLampStatus[0] = true;
+						requestDirection = Direction.UP;
+					} else if (direction.equals("Down")) {
+						requestDirection = Direction.DOWN;
+						currLampStatus[1] = true;
+					} else {
+						requestDirection = Direction.STOPPED;
+					}
 
-				FloorRequest request = new FloorRequest(requestArray[0], travelTime, doorTime,
-						Integer.parseInt(requestArray[1]), Integer.parseInt(requestArray[3]), requestDirection);
+					request = new FloorRequest(requestArray[0], travelTime, doorTime,
+							Integer.parseInt(requestArray[1]), Integer.parseInt(requestArray[3]), requestDirection);
+				}
 				this.listofRequests.add(request);
 			}
 
@@ -248,13 +259,16 @@ public class FloorSubsystem implements Runnable {
 			if (wait.equals("waiting")) {
 				System.out.println("Floor has nothing to send");
 				wait = "";
-				while(true){
-				testing();}
 			}
+			while(true){
+				testing();}
 		} else {
 			FloorRequest floorRequest = listofRequests.get(0);
 			wait = "waiting";
 			String floorRequestData = floorRequest.toString();
+			if(floorRequest.getFloorDestination() < 0){
+				floorRequestData = "error " + floorRequest.getFloorDestination();
+			}
 			byte[] toSend = floorRequestData.getBytes();
 			try {
 				this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getFloorPort());
@@ -284,6 +298,8 @@ public class FloorSubsystem implements Runnable {
 			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength()))
 					.split(" ");
+
+
 			
 			String[] elevators = new String[numOfElevators];
 			/*for(String s : elevators){
@@ -292,8 +308,12 @@ public class FloorSubsystem implements Runnable {
 			for (int i = 0; i < numOfElevators; i++) {
 				String splitResponse = splitElevatorResponse[i];
 				String[] individualElevator = splitResponse.split("-");
-				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
-						- 1] = splitResponse;
+				try{
+					elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
+							- 1] = splitResponse;
+				}catch(UnknownError e){
+					elevators[i] = splitResponse;
+				}
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 					//Turn off floor lamp when elevator reaches requested floor
@@ -312,6 +332,9 @@ public class FloorSubsystem implements Runnable {
 				}
 				if (individualElevator[1].equals("door_opening")) {
 					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("error")){
+					numOfElevators--;
 				}
 			}
 
@@ -370,8 +393,12 @@ public class FloorSubsystem implements Runnable {
 				for (int i = 0; i < splitElevatorResponse.length; i++) {
 					String splitResponse = splitElevatorResponse[i];
 					String[] individualElevator = splitResponse.split("-");
-					elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
-							- 1] = splitResponse;
+					try{
+						elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
+								- 1] = splitResponse;
+					}catch(UnknownError e){
+						elevators[i] = splitResponse;
+					}
 					if (individualElevator[1].equals("arrived")) {
 						this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 						//Turn off floor lamp when elevator reaches requested floor
@@ -390,6 +417,9 @@ public class FloorSubsystem implements Runnable {
 					}
 					if (individualElevator[1].equals("door_opening")) {
 						floorStatus = "go";
+					}
+					if (individualElevator[1].equals("error")){
+						numOfElevators--;
 					}
 				}
 
@@ -454,8 +484,12 @@ public class FloorSubsystem implements Runnable {
 		for (int i = 0; i < numOfElevators; i++) {
 			String splitResponse = splitElevatorResponse[i];
 			String[] individualElevator = splitResponse.split("-");
-			elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
-					- 1] = splitResponse;
+			try{
+				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
+						- 1] = splitResponse;
+			}catch(UnknownError e){
+				elevators[i] = splitResponse;
+			}
 			if (individualElevator[1].equals("arrived")) {
 				this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 				//Turn off floor lamp when elevator reaches requested floor
@@ -474,6 +508,9 @@ public class FloorSubsystem implements Runnable {
 			}
 			if (individualElevator[1].equals("door_opening")) {
 				floorStatus = "go";
+			}
+			if (individualElevator[1].equals("error")){
+				numOfElevators--;
 			}
 		}
 
@@ -532,8 +569,12 @@ public class FloorSubsystem implements Runnable {
 			for (int i = 0; i < splitElevatorResponse.length; i++) {
 				String splitResponse = splitElevatorResponse[i];
 				String[] individualElevator = splitResponse.split("-");
-				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
-						- 1] = splitResponse;
+				try{
+					elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
+							- 1] = splitResponse;
+				}catch(UnknownError e){
+					elevators[i] = splitResponse;
+				}
 				if (individualElevator[1].equals("arrived")) {
 					this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 					//Turn off floor lamp when elevator reaches requested floor
@@ -552,6 +593,9 @@ public class FloorSubsystem implements Runnable {
 				}
 				if (individualElevator[1].equals("door_opening")) {
 					floorStatus = "go";
+				}
+				if (individualElevator[1].equals("error")){
+					numOfElevators--;
 				}
 			}
 

@@ -60,6 +60,8 @@ public class FloorRequest {
         return this.requestTime;
     }
 
+    public void setFloorDestination(int x){this.floorDestination = x;}
+
     /**
      * @return travel time of this elevator
      */

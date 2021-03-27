@@ -15,6 +15,7 @@ public class ElevatorData {
 	private int currentFloor;
 	private Direction direction;
 	private ReadPropertyFile r;
+	private int error;
 	
 	public ElevatorData(String name, int port, InetAddress address, int currentFloor) {
 		this.name = name;
@@ -25,11 +26,16 @@ public class ElevatorData {
 		this.currentFloor = currentFloor;
 		direction = Direction.STOPPED;
 		r = new ReadPropertyFile();
+		this.error = 0;
 	}
 
 	public int getCurrentFloor() {
 		return currentFloor;
 	}
+
+	public int getError(){return error;}
+
+	public void setError(int x) {this.error = x;}
 
 	public void setCurrentFloor(int currentFloor) {
 		this.currentFloor = currentFloor;

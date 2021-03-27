@@ -6,6 +6,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Random;
 
 /**
  * 
@@ -33,6 +34,7 @@ public class Scheduler {
 	private int maxElevator = 0;
 	private int count = 0;
 	private String mess;
+	private Random rand;
 
 	private static ReadPropertyFile r = new ReadPropertyFile();
 
@@ -54,6 +56,7 @@ public class Scheduler {
 		floorToVisit = -1;
 		emptyFloor = true;
 		emptyElevator = true;
+		rand = new Random();
 
 		currentState1 = SchedulerStates.STATE_1;
 		currentState2 = SchedulerStates.STATE_2;
@@ -71,7 +74,7 @@ public class Scheduler {
 	}
 
 	private void elevatorChange() {
-		if (elevatorBeingUsed == maxElevator) {
+		if (elevatorBeingUsed >= maxElevator) {
 			elevatorBeingUsed = 0;
 		} else {
 			elevatorBeingUsed++;
@@ -152,11 +155,19 @@ public class Scheduler {
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 		String[] cut = name.split(" ");
 		if (!cut[0].equals("go")) {
+			if(!cut[0].equals("error")){
+				checkPriority(Integer.parseInt(cut[1]), cut[2], Integer.parseInt(cut[3]));
+				// checkPriority(Integer.parseInt(cut[3]), cut[2]);
+				//System.out.println(name);
+			}
+			else{
+				int temp = rand.nextInt(elevators.size());
+				System.out.println(temp);
+				elevators.get(temp).setError(Integer.parseInt(cut[1]));
+			}
 			// TODO: Need to figure out the direction to go to the floor where we pick up
 			// people
-			checkPriority(Integer.parseInt(cut[1]), cut[2], Integer.parseInt(cut[3]));
-			// checkPriority(Integer.parseInt(cut[3]), cut[2]);
-			System.out.println(name);
+
 		}
 	}
 
@@ -268,6 +279,25 @@ public class Scheduler {
 						mess = mess + " " + splitElevatorMsg[0] + "-door_opening";
 						waiting--;
 					}
+				} else if (splitElevatorMsg[1].equals("error")) {
+					ElevatorData tempRem = elevators.get(elevatorBeingUsed);
+					elevators.remove(elevatorBeingUsed);
+					maxElevator--;
+					System.out.println(elevators.size());
+					int x = rand.nextInt(elevators.size());
+					ElevatorData tempEl = elevators.get(x);
+					for(int up: tempRem.getUpQueue()){
+						tempEl.addToUp(up);
+					}
+					for(int down: tempRem.getDownQueue()){
+						tempEl.addToDown(down);
+					}
+					if (mess.equals("")) {
+						mess = mess + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
+					} else {
+						mess = mess + " " + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
+						waiting--;
+					}
 				}
 			}
 		} else { // if arrived to floor
@@ -291,6 +321,7 @@ public class Scheduler {
 	 */
 	public synchronized void sendToFloor() {
 		byte[] toSend = new byte[100];
+		System.out.println("Sending");
 		if (waiting == elevators.size()) {
 			String dataString = "waiting";
 			toSend = dataString.getBytes();
@@ -317,13 +348,21 @@ public class Scheduler {
 		ElevatorData temp = elevators.get(elevatorBeingUsed);
 		byte[] toSend = new byte[100];
 		// send the appropriate floor request based on the elevator
-		int t = checkSend(temp);
-		if (t == -1) {
-			String wait = "waiting";
-			toSend = wait.getBytes();
-		} else {
-			String dat = t + " " + temp.getDirection();
-			toSend = dat.getBytes();
+
+		if(temp.getError() != 0){
+			String e = "error " + temp.getError();
+			temp.setError(0);
+			toSend = e.getBytes();
+		}
+		else{
+			int t = checkSend(temp);
+			if (t == -1) {
+				String wait = "waiting";
+				toSend = wait.getBytes();
+			} else {
+				String dat = t + " " + temp.getDirection();
+				toSend = dat.getBytes();
+			}
 		}
 
 		this.sendPacket = new DatagramPacket(toSend, toSend.length, temp.getAddress(), temp.getPort());
@@ -493,23 +532,23 @@ public class Scheduler {
 		int toVisit = -1;
 		
 		int currFloor = elevator.getCurrentFloor();
-		System.out.println("In check send");
+		//System.out.println("In check send");
 		
 		// If up queue is empty and down queue is not empty, set the elevator direction
 		// to down
 		if (elevator.getUpQueue().isEmpty() && !elevator.getDownQueue().isEmpty()) {
-			System.out.println("printing down queue");
+			//System.out.println("printing down queue");
 			for(int i : elevator.getDownQueue()) {
-				System.out.println(i);
+				//System.out.println(i);
 			}
 			elevator.setDirection(Direction.DOWN);
 		}
 		// If up queue is not empty and down queue is empty, set the elevator direction
 		// to up
 		else if (!elevator.getUpQueue().isEmpty() && elevator.getDownQueue().isEmpty()) {
-			System.out.println("printing up queue");
+			//System.out.println("printing up queue");
 			for(int i : elevator.getUpQueue()) {
-				System.out.println(i);
+				//System.out.println(i);
 			}
 			elevator.setDirection(Direction.UP);
 		} 
@@ -604,8 +643,8 @@ public class Scheduler {
 	public void InitializePort(int numOfElevators) {
 		maxElevator = numOfElevators;
 		maxElevator--;
-		System.out.println(maxElevator);
-		System.out.println(elevatorBeingUsed);
+		//System.out.println(maxElevator);
+		//(elevatorBeingUsed);
 		byte[] data = new byte[100];
 		receivePacket = new DatagramPacket(data, data.length);
 		try {

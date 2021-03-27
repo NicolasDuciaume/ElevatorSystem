@@ -17,6 +17,7 @@ public class ElevatorSubsystem implements Runnable {
 
 	private int location = 1; // current location of the elevator
 	private ElevatorStates currentState; // current state of the elevator
+	private ElevatorStates prevState;
 	private Direction motorState; // The motor state is whether the elevator is moving
 	private Queue<FloorRequest> floorRequests; // Queue of requests that the elevator has to full fill
 	private boolean doorOpen; // Whether the door is open
@@ -34,6 +35,7 @@ public class ElevatorSubsystem implements Runnable {
 	private long time2 = 0;
 	private int moving = 1;
 	private int currFloor, destFloor;
+	private int errorSelect = 0;
 
 	private static ReadPropertyFile r = new ReadPropertyFile();
 	private static long time_open_close_doors = r.getTimeToOpenCloseDoors();
@@ -54,6 +56,7 @@ public class ElevatorSubsystem implements Runnable {
 		elevatorLamps = new boolean[r.getNumFloors()];
 		currFloor = 1;
 		destFloor = 0;
+
 
 		try {
 			sendReceiveSocket = new DatagramSocket();
@@ -136,6 +139,7 @@ public class ElevatorSubsystem implements Runnable {
 
 		switch (currentState) {
 		case INITIAL_STATE: // Elevator stopped with doors open
+
 			byte[] data = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
 			try {
@@ -168,6 +172,12 @@ public class ElevatorSubsystem implements Runnable {
 				//if (countWaiting >= 10)
 					//System.exit(0);
 			} else {
+				String[] temp = receivePacketData.split(" ");
+				if(temp[0].equals("error")){
+					errorSelect = Integer.parseInt(temp[1]);
+					currentState = ElevatorStates.STATE_5;
+					break;
+				}
 				currentState = ElevatorStates.STATE_1;
 				countWaiting = 0;
 			}
@@ -235,7 +245,6 @@ public class ElevatorSubsystem implements Runnable {
 			long x = time_between_floors * Math.abs(this.destFloor - this.currFloor);
 			if(System.nanoTime()  <= (x + time)){
 				long currTime = System.nanoTime();
-				
 				if(currTime - time2 >= time_between_floors){
 					if(this.currFloor < this.destFloor){
 						location++;
@@ -245,8 +254,8 @@ public class ElevatorSubsystem implements Runnable {
 						location--;
 						time2 = System.nanoTime();
 					}
-					
 				}
+
 				String msg = name + "-moving-" + (location + 1);
 				byte[] toSend = msg.getBytes();
 				try {
@@ -315,6 +324,52 @@ public class ElevatorSubsystem implements Runnable {
 			}
 			
 			break;
+		case STATE_5:
+			if(errorSelect == -1){
+				System.out.println(name + " door closing");
+				String msg1 = name + "-door_closing";
+				byte[] toSend1 = msg1.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				System.out.println(name + " Door is stuck");
+				System.out.println(name + " reseting Door");
+				currentState = ElevatorStates.INITIAL_STATE;
+				break;
+			}
+			else if (errorSelect == -2){
+				System.out.println(name + " Stuck at floor " + this.currFloor);
+				System.out.println(name + " Shutting down and re allocating queues");
+				String msg1 = name + "-error-" +this.currFloor;
+				byte[] toSend1 = msg1.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				errorSelect = -3;
+			}
+			else if (errorSelect == -3){
+
+			}
 		}
 	}
 
@@ -369,7 +424,8 @@ public class ElevatorSubsystem implements Runnable {
 		STATE_1, // Close doors
 		STATE_2, // Elevator moving
 		STATE_3, // Reach destination
-		STATE_4;
+		STATE_4,
+		STATE_5;
 		private ElevatorStates() {
 		}
 	}
