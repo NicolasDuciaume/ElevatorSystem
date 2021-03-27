@@ -30,6 +30,7 @@ Files
 ===================
 FloorSubsystem.java     - Floor Class
 ElevatorSubsystem.java  - Elevator Class
+ElevatorData.java       - Holds elevator data for scheduler
 Main.java               - Main class
 Sheduler.java           - Scheduler
 SchedulerTest.java      - Test suite
@@ -58,8 +59,8 @@ Request have been completed the FloorSubsystem stops and wait for new request wh
 
 BreakDown
 ====================
-Nicolas Duciaume: README, Conversion to UDP, Allowing for multiple elevators
-Jameel Alidina: Checkpriority method, Configuration file, refactoring
-Tooba Sheikh: Checkpriority method, Printing formating correction, Error correction, refactoring
-Chris D'Silva: Creating UML and Sequence Diagrams, Checkpriority method
-Nazifa Tanzim:  Checkpriority method, Printing formating correction, Creating Tests
+Nicolas Duciaume: README, Timing, Error addition
+Jameel Alidina: Floor lamps, Elevator Lamp, Error addition
+Tooba Sheikh: Comments, Timing, Error addition
+Chris D'Silva: Creating UML and Sequence Diagrams, Floor lamps, Elevator Lamp
+Nazifa Tanzim:  Timing, Error addition, Creating Tests
