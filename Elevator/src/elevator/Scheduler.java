@@ -30,6 +30,7 @@ public class Scheduler {
 	private DatagramSocket sendReceiveSocketFloor, sendReceiveSocketElevators;
 	private InetAddress addressFloor;
 	private ArrayList<ElevatorData> elevators;
+	private ArrayList<ElevatorData> elevatorsStuck;
 	private int waiting = 0;
 	private int elevatorBeingUsed = 0;
 	private int maxElevator = 0;
@@ -44,7 +45,7 @@ public class Scheduler {
 	 *
 	 */
 	public enum SchedulerStates {
-		STATE_1, 
+		STATE_1,
 		STATE_2;
 	}
 
@@ -64,6 +65,7 @@ public class Scheduler {
 		currentState2 = SchedulerStates.STATE_2;
 
 		elevators = new ArrayList<>();
+		elevatorsStuck = new ArrayList<>();
 
 		try {
 			sendReceiveSocketFloor = new DatagramSocket(r.getFloorPort());
@@ -159,11 +161,11 @@ public class Scheduler {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
+
 		//turn packet to string and split it into an array of strings
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 		String[] cut = name.split(" ");
-		
+
 		//if string is a floor request
 		if (!cut[0].equals("go")) {
 			if(!cut[0].equals("error")){//if floor request is not an error
@@ -195,14 +197,14 @@ public class Scheduler {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
+
 		// Converts the packet to string and splits it into an array of strings
 		String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 		String[] splitElevatorMsg = name.split("-");
 		String[] test = mess.split(" "); //split message string into an array of strings
-		
-		// If message was not blank and was split into an array 
-		// then append the packet string to the message depending 
+
+		// If message was not blank and was split into an array
+		// then append the packet string to the message depending
 		// on the info contained within message
 		for (String tt : test) {
 			String[] test2 = tt.split("-");
@@ -250,16 +252,16 @@ public class Scheduler {
 				return false;
 			}
 		}
-		
+
 
 		// if elevator hasn't arrived
-		if (!splitElevatorMsg[1].equals("arrived")) { 
+		if (!splitElevatorMsg[1].equals("arrived")) {
 			if (splitElevatorMsg[1].equals("added")) {
 				//button pressed, send new instruction to sort into Queues
 				this.checkPriority(-1, null, Integer.parseInt(splitElevatorMsg[0]));
 			} else {//Elevator in a state of in between  movements
 				if (splitElevatorMsg[1].equals("moving")) {//If elevator moving between floor
-					if (mess.equals("")) {  
+					if (mess.equals("")) {
 						//if message in empty, set message as data received from elevator
 						mess = mess + splitElevatorMsg[0] + "-moving-" + splitElevatorMsg[2];
 					} else {
@@ -269,7 +271,7 @@ public class Scheduler {
 					}
 				} else if (splitElevatorMsg[1].equals("waiting")) { //If elevator waiting for new instruction
 					waiting++;
-					if (mess.equals("")) {  
+					if (mess.equals("")) {
 						//if message in empty, set message as data received from elevator
 						mess = mess + splitElevatorMsg[0] + "-waiting";
 					} else {
@@ -287,17 +289,17 @@ public class Scheduler {
 					}
 
 				}else if (splitElevatorMsg[1].equals("door_closed")) { //If elevators door closed
-					if (mess.equals("")) { 
+					if (mess.equals("")) {
 						//if message in empty, set message as data received from elevator
 						mess = mess + splitElevatorMsg[0] + "-door_closed-" + splitElevatorMsg[2];
-					} else { 
+					} else {
 						//if message not empty, append data received from elevator to message
 						mess = mess + " " + splitElevatorMsg[0] + "-door_closed-" + splitElevatorMsg[2];
 						waiting--;
 					}
 
 				} else if (splitElevatorMsg[1].equals("door_opening")) { //If elevator doors opening
-					if (mess.equals("")) {  
+					if (mess.equals("")) {
 						//if message in empty, set message as data received from elevator
 						mess = mess + splitElevatorMsg[0] + "-door_opening";
 					} else {
@@ -305,27 +307,9 @@ public class Scheduler {
 						mess = mess + " " + splitElevatorMsg[0] + "-door_opening";
 						waiting--;
 					}
-				} else if (splitElevatorMsg[1].equals("error")) { //If elevator has a fatal stuck between floors error
-					//remove from allowed to use elevators
-					ElevatorData tempRem = elevators.get(elevatorBeingUsed);
-					elevators.remove(elevatorBeingUsed);
-					maxElevator--;
-					System.out.println(elevators.size());
-					
-					//Get an elevator from the list of elevators
-					int x = rand.nextInt(elevators.size());
-					ElevatorData tempEl = elevators.get(x);
-					
-					//Reorganize the items from the queues of the broken elevator to another elevator
-					for(int up: tempRem.getUpQueue()){
-						tempEl.addToUp(up);
-					}
-					for(int down: tempRem.getDownQueue()){
-						tempEl.addToDown(down);
-					}
-					//Send error info to the floor subsystem
-					if (mess.equals("")) {  
-						//if message in empty, set message as data received from elevator
+				} else if (splitElevatorMsg[1].equals("error")) {
+					elevatorsStuck.add(elevators.get(elevatorBeingUsed));
+					if (mess.equals("")) {
 						mess = mess + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
 					} else {
 						//if message not empty, append data received from elevator to message
@@ -355,21 +339,21 @@ public class Scheduler {
 	 *         TODO: Turn on lamps on floor
 	 */
 	public synchronized void sendToFloor() {
-		//create a byte array 
+		//create a byte array
 		byte[] toSend = new byte[100];
 		System.out.println("Sending");
-		
+
 		//If all elevator in use than wait
 		if (waiting == elevators.size()) {
 			String dataString = "waiting";
 			toSend = dataString.getBytes();
 			mess = "";
-		} else {//if there is at least one elevator available than setup the data to send 
+		} else {//if there is at least one elevator available than setup the data to send
 			String dataString = mess;
 			toSend = dataString.getBytes();
 			mess = "";
 		}
-		
+
 		//Create and try to send the packet to the floor subsystem
 		this.sendPacket = new DatagramPacket(toSend, toSend.length, addressFloor, portFloor);
 		try {
@@ -419,12 +403,12 @@ public class Scheduler {
 	/**
 	 * 
 	 * Uses the differences to figure out which elevator is going to be sent
-	 * 
+	 *
 	 * @param differenceMap stores all the differences between floors
 	 * @param floor stores the origin floor
 	 * @param down boolean that chooses whether the origin is up or down from the current elevator location
-	 * @param floor2 stores the destination 
-	 * @param direction stores the direction 
+	 * @param floor2 stores the destination
+	 * @param dir stores the direction
 	 */
 	private void getElevatorFromDifference(HashMap<String, Integer> differenceMap, int floor, boolean down, int floor2,
 			String dir) {
@@ -461,11 +445,11 @@ public class Scheduler {
 	 * Adds the floor to the right queue
 	 * 
 	 * @param origin thats is the floor that need to be added to the queue
-	 * @param Direction received from the floor
+	 * @param floorButtonDirection received from the floor
 	 * @param floor is the destination
 	 */
 	public synchronized void checkPriority(int origin, String floorButtonDirection, int floor) {
-		
+
 		// Splits Elevator into different hashmaps depending on their direction
 		HashMap<String, Integer> differenceUp = new HashMap<>();
 		HashMap<String, Integer> differenceDown = new HashMap<>();
@@ -475,20 +459,25 @@ public class Scheduler {
 		for (ElevatorData currElevator : elevators) {
 			// difference - used to calculate difference from the elevators current floor
 			// and the new floor request
-			int difference = currElevator.getCurrentFloor() - origin;
-			if (currElevator.getDirection().equals(Direction.DOWN)) {
-				if (difference > 0) {
-					differenceDown.put(currElevator.name, difference);
-				}
-			} else if (currElevator.getDirection().equals(Direction.UP)) {
-				if (difference < 0) {
-					differenceUp.put(currElevator.name, difference);
-				}
-			} else if (currElevator.getDirection().equals(Direction.STOPPED)) {
-				differenceStopped.put(currElevator.getName(), difference);
-			} else {
-				// if direction is not correct
+			if(!elevatorsStuck.contains(currElevator) || elevatorsStuck.isEmpty()){
+				int difference = currElevator.getCurrentFloor() - origin;
+				if (currElevator.getDirection().equals(Direction.DOWN)) {
+					if (difference > 0) {
+						differenceDown.put(currElevator.name, difference);
+//					downElevators.add(currElevator);
+					}
+				} else if (currElevator.getDirection().equals(Direction.UP)) {
+					if (difference < 0) {
+						differenceUp.put(currElevator.name, difference);
+//					upElevators.add(currElevator);
+					}
+				} else if (currElevator.getDirection().equals(Direction.STOPPED)) {
+					differenceStopped.put(currElevator.getName(), difference);
+//				stoppedElevators.add(currElevator);
+				} else {
+					// if direction is not correct
 
+				}
 			}
 
 		}
@@ -502,7 +491,7 @@ public class Scheduler {
 
 			} else {
 				// Case where there are no elevators going down or stopped, so we assign the
-				// floor request to an elevator with the least amount of requests 
+				// floor request to an elevator with the least amount of requests
 				//(ie. the size of their up and down queues)
 				ElevatorData minElevatorReq = elevators.get(elevatorBeingUsed);
 				int minSum = minElevatorReq.getUpQueue().size() + minElevatorReq.getDownQueue().size();
@@ -535,7 +524,7 @@ public class Scheduler {
 
 			} else {
 				// Case where there are no elevators going down or stopped, so we assign the
-				// floor request to an elevator with the least amount of requests 
+				// floor request to an elevator with the least amount of requests
 				//(ie. the size of their up and down queues)
 				ElevatorData minElevatorReq = elevators.get(elevatorBeingUsed);
 				int minSum = minElevatorReq.getUpQueue().size() + minElevatorReq.getDownQueue().size();
@@ -611,11 +600,11 @@ public class Scheduler {
 		return toVisit;
 	}
 
-	
+
 
 	/**
 	 * Initializes the packet sockets and the number of elevators
-	 * 
+	 *
 	 * @param numOfElevators
 	 */
 	public void InitializePort(int numOfElevators) {
@@ -671,7 +660,7 @@ public class Scheduler {
 	/**
 	 *  A to string method for the byte array
 	 *  Converts byte array to string
-	 *  
+	 *
 	 *  @return string
 	 */
 	private static String toString(byte[] temp) {
@@ -747,7 +736,7 @@ public class Scheduler {
 	public void setElevators(ArrayList<ElevatorData> e) {
 		this.elevators = e;
 	}
-	
+
 	/**
 	 * Initializes and runs the thread
 	 * @param args

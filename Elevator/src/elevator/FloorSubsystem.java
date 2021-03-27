@@ -126,6 +126,9 @@ public class FloorSubsystem implements Runnable {
 				this.data = myReader.nextLine();
 				FloorRequest request = new FloorRequest();
 				String[] requestArray = this.data.split(" ");
+				/*for(String x: requestArray){
+					System.out.println(x);
+				}*/
 				if(requestArray[0].equals("error")){
 					if(requestArray[1].equals("doorStuck")){
 						request.setFloorDestination(-1);
@@ -259,9 +262,9 @@ public class FloorSubsystem implements Runnable {
 			if (wait.equals("waiting")) {
 				System.out.println("Floor has nothing to send");
 				wait = "";
+				while(true){
+					testing();}
 			}
-			while(true){
-				testing();}
 		} else {
 			FloorRequest floorRequest = listofRequests.get(0);
 			wait = "waiting";
@@ -334,7 +337,7 @@ public class FloorSubsystem implements Runnable {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("error")){
-					numOfElevators--;
+					floorStatus = "go";
 				}
 			}
 
@@ -419,7 +422,7 @@ public class FloorSubsystem implements Runnable {
 						floorStatus = "go";
 					}
 					if (individualElevator[1].equals("error")){
-						numOfElevators--;
+						floorStatus = "go";
 					}
 				}
 
@@ -510,7 +513,7 @@ public class FloorSubsystem implements Runnable {
 				floorStatus = "go";
 			}
 			if (individualElevator[1].equals("error")){
-				numOfElevators--;
+				floorStatus = "go";
 			}
 		}
 
@@ -595,7 +598,7 @@ public class FloorSubsystem implements Runnable {
 					floorStatus = "go";
 				}
 				if (individualElevator[1].equals("error")){
-					numOfElevators--;
+					floorStatus = "go";
 				}
 			}
 

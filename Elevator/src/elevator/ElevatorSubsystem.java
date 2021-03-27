@@ -47,7 +47,7 @@ public class ElevatorSubsystem implements Runnable {
 
 	/**
 	 * Instantiates the variables
-	 * 
+	 *
 	 * @param name Name of the thread
 	 */
 	public ElevatorSubsystem(String name) {
@@ -112,7 +112,7 @@ public class ElevatorSubsystem implements Runnable {
 	/**
 	 * Depending on the current state, sets the direction in which the elevator
 	 * needs to move or if stationary, then turns on lamps
-	 * 
+	 *
 	 * @param type Used to identify whether the elevator needs directions or need
 	 *             the floor lamps.
 	 */
@@ -151,19 +151,19 @@ public class ElevatorSubsystem implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.exit(1);
-			} 
-			
+			}
+
 			//Convert packet to string
 			String receivePacketData = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
-			
+
 			//print the info received
 			System.out.println(
 					this.name + " Received: " + new String(receivePacket.getData(), 0, this.receivePacket.getLength()));
-			
-			//Process the received info 
+
+			//Process the received info
 			if (receivePacketData.equals("waiting")) {  //if received waiting then, put elevator into initial state
 				currentState = ElevatorStates.INITIAL_STATE;
-				
+
 				//Sending the name of the elevator and "waiting" message back so that scheduler know which elevator is available
 				String elevatorWithRequest = name + "-" + receivePacketData;
 				byte[] toSend = elevatorWithRequest.getBytes();
@@ -225,10 +225,10 @@ public class ElevatorSubsystem implements Runnable {
 				}
 				currentState = ElevatorStates.STATE_2;
 				time = System.nanoTime();
-			} else { //if door is still in the process of closing 
+			} else { //if door is still in the process of closing
 				System.out.println(name + " door closing");
-				
-				//Send to scheduler that door is closing 
+
+				//Send to scheduler that door is closing
 				String msg1 = name + "-door_closing";
 				byte[] toSend1 = msg1.getBytes();
 				try {
@@ -309,8 +309,8 @@ public class ElevatorSubsystem implements Runnable {
 				doorOpen = true;
 				motorState = Direction.STOPPED;
 				directionLamp = motorState;
-				
-				//Send to schedular with arrive info 
+
+				//Send to schedular with arrive info
 				this.currFloor = Integer.parseInt(this.packetString[0]);
 				String msg = name + "-arrived-" + this.packetString[0];
 				byte[] toSend = msg.getBytes();
@@ -375,7 +375,7 @@ public class ElevatorSubsystem implements Runnable {
 				//Simulate door stuck and reset
 				System.out.println(name + " Door is stuck");
 				System.out.println(name + " reseting Door");
-				
+
 				//go back to initial state, to recieve further instructions
 				currentState = ElevatorStates.INITIAL_STATE;
 				break;
@@ -400,6 +400,23 @@ public class ElevatorSubsystem implements Runnable {
 					System.exit(1);
 				}
 				errorSelect = -3;
+			}
+			else if (errorSelect == -3){
+				String msg1 = name + "-error-" +this.currFloor;
+				byte[] toSend1 = msg1.getBytes();
+				try {
+					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+
+				try {
+					this.sendReceiveSocket.send(this.sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
 			}
 		}
 	}
@@ -453,10 +470,10 @@ public class ElevatorSubsystem implements Runnable {
 	public static enum ElevatorStates {
 		INITIAL_STATE, // Elevator stopped with doors open
 		STATE_1, // Close doors
-		STATE_2, // Transition to moving
-		STATE_3, // Elevator moving
-		STATE_4, // Reach destination
-		STATE_5; // Error handling
+		STATE_2, // Elevator moving
+		STATE_3, // Reach destination
+		STATE_4,
+		STATE_5;
 		private ElevatorStates() {
 		}
 	}
