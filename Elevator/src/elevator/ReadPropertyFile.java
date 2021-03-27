@@ -17,6 +17,10 @@ public class ReadPropertyFile {
 	Properties property;
 	private static final long NANOSEC = 1000000000;
 	
+	/**
+	 * Initializes the variables and gets the input configuration file
+	 *
+	 */
 	public ReadPropertyFile() {
 		property = new Properties();
 		
@@ -30,48 +34,54 @@ public class ReadPropertyFile {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * Gets the floor port from the config file 
+	 *  
+	 * @return floor port
 	 */
 	public int getFloorPort() {
 		return Integer.parseInt(this.property.getProperty("floor_port"));
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Gets the elevator port from the config file 
+	 *  
+	 * @return elevator port
 	 */
 	public int getElevatorPort() {
 		return Integer.parseInt(this.property.getProperty("elevator_port"));
 	}
 		
 	/**
-	 * 
-	 * @return
+	 * Gets the num of elevator from the config file 
+	 *  
+	 * @return num of elevator
 	 */
 	public int getNumElevators() {
 		return Integer.parseInt(this.property.getProperty("elevators"));
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Gets the num of floors from the config file 
+	 *  
+	 * @return num of floors
 	 */
 	public int getNumFloors() {
 		return Integer.parseInt(this.property.getProperty("floors"));
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Gets the time of opening and closing door form the config file 
+	 *  
+	 * @return the open/close door time
 	 */
 	public long getTimeToOpenCloseDoors() {
 		return Long.parseLong(this.property.getProperty("time_open_close_doors_sec")) * NANOSEC;
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Gets the time an elevator takes from one floor to another form the config file 
+	 *  
+	 * @return time between floors taken by the elevator
 	 */
 	public long getTimeBetweenFloors() {
 		return Long.parseLong(this.property.getProperty("time_between_floors_sec")) * NANOSEC;
