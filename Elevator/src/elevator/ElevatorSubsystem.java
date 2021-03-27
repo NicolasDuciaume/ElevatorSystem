@@ -1,5 +1,6 @@
 package elevator;
 
+
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -180,7 +181,7 @@ public class ElevatorSubsystem implements Runnable {
 
 				this.packetString = (new String(receivePacket.getData(), 0, this.receivePacket.getLength())).split(" ");
 				parseData(this.packetString[1], "Direction");
-				String msg1 = name + "-door_closed";
+				String msg1 = name + "-door_closed-"+ currFloor;
 				byte[] toSend1 = msg1.getBytes();
 				try {
 					this.sendPacket = new DatagramPacket(toSend1, toSend1.length, InetAddress.getLocalHost(), r.getElevatorPort());
@@ -222,7 +223,10 @@ public class ElevatorSubsystem implements Runnable {
 			directionLamp = motorState;
 			parseData(this.packetString[0], "Floor Number");
 			parseData(this.packetString[1], "Direction");
-			// Listen to request implementation
+			// TODO:Listen to request implementation
+			//Elevator Lamps and Buttons are pushed within elevator to add a new request
+			
+			
 			currentState = ElevatorStates.STATE_3;
 			time = System.nanoTime();
 			time2 = System.nanoTime();

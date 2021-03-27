@@ -1,11 +1,13 @@
 package elevator;
 
+
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.io.IOException;
 import java.net.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner; //Import this class to accept input
@@ -31,6 +33,7 @@ public class FloorSubsystem implements Runnable {
 	private int numOfElevators = 0;
 	public int requestCount = 0;
 	private Map<Integer,Boolean[]> floorLamps; 
+	private Map<Integer,ArrayList<Boolean>> arrivalSensors;
 
 	private static ReadPropertyFile r = new ReadPropertyFile();
 
@@ -47,6 +50,14 @@ public class FloorSubsystem implements Runnable {
 		for(int i = 0; i < r.getNumFloors(); i++) {
 			Boolean[] b = {false,false};
 			floorLamps.put(i+1, b);
+		}
+		arrivalSensors = new HashMap<Integer,ArrayList<Boolean>>();
+		for(int i = 0; i < r.getNumFloors(); i++) {
+			ArrayList<Boolean> b = new ArrayList<>();
+			for(int j = 0; j < r.getNumElevators(); j++) {
+				b.add(false);
+			}
+			arrivalSensors.put(i+1,b);
 		}
 		
 		this.addFloorRequest(FileLocation);
@@ -141,7 +152,29 @@ public class FloorSubsystem implements Runnable {
 	}
 
 	// TODO: Turn Lamps, buttons etc on
-	public void setLampsSensors(String floor) {
+	public void setLampsSensors(String floor,String elevator,boolean on) {
+		//Turn on Arrival Sensor when elevator arrives at a floor
+		ArrayList<Boolean> b = arrivalSensors.get(Integer.parseInt(floor));
+		char c = elevator.charAt(elevator.length()-1);
+		int elevatorNum = Character.getNumericValue(c);
+		if(on) {
+			b.set(elevatorNum-1, true);
+		}else {
+			if(b.get(elevatorNum-1)) {
+				b.set(elevatorNum-1, false);
+			}
+		}
+		arrivalSensors.remove(Integer.parseInt(floor));
+		arrivalSensors.put(Integer.parseInt(floor), b);
+		if(on) {
+			System.out.println("Arrival Sensor on Floor "+floor+ " for Elevator " + elevatorNum + " turned on!");
+		}else {
+			System.out.println("Arrival Sensor on Floor "+floor+ " for Elevator " + elevatorNum + " turned off!");
+		}
+	}
+	
+	public void setArrivalSensorOff(String floor,String elevator) {
+		
 	}
 	
 	private void setFloorLampsOff(String floor) {
@@ -182,7 +215,7 @@ public class FloorSubsystem implements Runnable {
 				System.exit(0);
 			}
 			if (splitElevatorResponse[0].equals("arrived")) {
-				this.setLampsSensors(splitElevatorResponse[1]);
+//				this.setLampsSensors(splitElevatorResponse[1]);
 				this.data = "go";
 			}
 
@@ -251,7 +284,7 @@ public class FloorSubsystem implements Runnable {
 			String toPrint = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
 			String[] splitElevatorResponse = (new String(receivePacket.getData(), 0, this.receivePacket.getLength()))
 					.split(" ");
-
+			
 			String[] elevators = new String[numOfElevators];
 			/*for(String s : elevators){
 				System.out.println(s);
@@ -262,7 +295,7 @@ public class FloorSubsystem implements Runnable {
 				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
 						- 1] = splitResponse;
 				if (individualElevator[1].equals("arrived")) {
-					this.setLampsSensors(individualElevator[2]);
+					this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 					//Turn off floor lamp when elevator reaches requested floor
 					setFloorLampsOff(individualElevator[2]);
 					floorStatus = "go";
@@ -275,6 +308,7 @@ public class FloorSubsystem implements Runnable {
 				}
 				if (individualElevator[1].equals("door_closed")) {
 					floorStatus = "go";
+					setLampsSensors(individualElevator[2],individualElevator[0],false);
 				}
 				if (individualElevator[1].equals("door_opening")) {
 					floorStatus = "go";
@@ -339,7 +373,7 @@ public class FloorSubsystem implements Runnable {
 					elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
 							- 1] = splitResponse;
 					if (individualElevator[1].equals("arrived")) {
-						this.setLampsSensors(individualElevator[2]);
+						this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 						//Turn off floor lamp when elevator reaches requested floor
 						setFloorLampsOff(individualElevator[2]);
 						floorStatus = "go";
@@ -352,6 +386,7 @@ public class FloorSubsystem implements Runnable {
 					}
 					if (individualElevator[1].equals("door_closed")) {
 						floorStatus = "go";
+						setLampsSensors(individualElevator[2],individualElevator[0],false);
 					}
 					if (individualElevator[1].equals("door_opening")) {
 						floorStatus = "go";
@@ -422,7 +457,7 @@ public class FloorSubsystem implements Runnable {
 			elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
 					- 1] = splitResponse;
 			if (individualElevator[1].equals("arrived")) {
-				this.setLampsSensors(individualElevator[2]);
+				this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 				//Turn off floor lamp when elevator reaches requested floor
 				setFloorLampsOff(individualElevator[2]);
 				floorStatus = "go";
@@ -435,6 +470,7 @@ public class FloorSubsystem implements Runnable {
 			}
 			if (individualElevator[1].equals("door_closed")) {
 				floorStatus = "go";
+				setLampsSensors(individualElevator[2],individualElevator[0],false);
 			}
 			if (individualElevator[1].equals("door_opening")) {
 				floorStatus = "go";
@@ -499,7 +535,7 @@ public class FloorSubsystem implements Runnable {
 				elevators[Integer.parseInt(individualElevator[0].substring(individualElevator[0].length() - 1))
 						- 1] = splitResponse;
 				if (individualElevator[1].equals("arrived")) {
-					this.setLampsSensors(individualElevator[2]);
+					this.setLampsSensors(individualElevator[2],individualElevator[0],true);
 					//Turn off floor lamp when elevator reaches requested floor
 					setFloorLampsOff(individualElevator[2]);
 					floorStatus = "go";
@@ -512,6 +548,7 @@ public class FloorSubsystem implements Runnable {
 				}
 				if (individualElevator[1].equals("door_closed")) {
 					floorStatus = "go";
+					setLampsSensors(individualElevator[2],individualElevator[0],false);
 				}
 				if (individualElevator[1].equals("door_opening")) {
 					floorStatus = "go";

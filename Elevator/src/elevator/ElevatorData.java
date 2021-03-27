@@ -1,8 +1,10 @@
 package elevator;
 
+
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class ElevatorData {
 	String name = "";
@@ -12,7 +14,8 @@ public class ElevatorData {
 	private ArrayList<Integer> downQueue;
 	private int currentFloor;
 	private Direction direction;
-
+	private ReadPropertyFile r;
+	
 	public ElevatorData(String name, int port, InetAddress address, int currentFloor) {
 		this.name = name;
 		this.port = port;
@@ -21,6 +24,7 @@ public class ElevatorData {
 		downQueue = new ArrayList<>();
 		this.currentFloor = currentFloor;
 		direction = Direction.STOPPED;
+		r = new ReadPropertyFile();
 	}
 
 	public int getCurrentFloor() {

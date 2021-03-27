@@ -1,5 +1,6 @@
 package elevator;
 
+
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
@@ -254,9 +255,9 @@ public class Scheduler {
 
 				}else if (splitElevatorMsg[1].equals("door_closed")) {
 					if (mess.equals("")) {
-						mess = mess + splitElevatorMsg[0] + "-door_closed";
+						mess = mess + splitElevatorMsg[0] + "-door_closed-" + splitElevatorMsg[2];
 					} else {
-						mess = mess + " " + splitElevatorMsg[0] + "-door_closed";
+						mess = mess + " " + splitElevatorMsg[0] + "-door_closed-" + splitElevatorMsg[2];
 						waiting--;
 					}
 
