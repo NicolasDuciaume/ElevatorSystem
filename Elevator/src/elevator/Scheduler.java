@@ -496,6 +496,7 @@ public class Scheduler {
                         if (minElevatorReq.getName().equals(e.getName())) {
                             e.addToDown(origin);
                             e.addToDown(floor);
+                            e.setElevatorLamps(true, floor);
                             break;
                         }
                     }
@@ -529,6 +530,7 @@ public class Scheduler {
                         if (minElevatorReq.getName().equals(e.getName())) {
                             e.addToUp(origin);
                             e.addToUp(floor);
+                            e.setElevatorLamps(false, floor);
                             break;
                         }
                     }
