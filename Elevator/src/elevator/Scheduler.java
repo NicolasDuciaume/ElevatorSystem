@@ -737,5 +737,6 @@ public class Scheduler {
 
         scheduler.InitializePort(r.getNumElevators());
         scheduler.sendAndReceive();
+
     }
 }
