@@ -3,6 +3,7 @@ package elevator;
 
 import java.io.IOException;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -297,7 +298,9 @@ public class ElevatorSubsystem implements Runnable {
     }
 
     private void sendElevatorMessage(String elevatorWithRequest) {
-        byte[] toSend = elevatorWithRequest.getBytes();
+//    	String msg = elevatorWithRequest + "-" + String.valueOf(new Timestamp(System.currentTimeMillis()));
+//        byte[] toSend = msg.getBytes();
+    	byte[] toSend = elevatorWithRequest.getBytes();
         try {
             this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
         } catch (UnknownHostException e) {
