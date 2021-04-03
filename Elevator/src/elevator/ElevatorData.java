@@ -16,7 +16,7 @@ public class ElevatorData {
 	private InetAddress address;
 	private ArrayList<Integer> upQueue;
 	private ArrayList<Integer> downQueue;
-	private int currentFloor;
+	private int currentFloor, destination;
 	private Direction direction;
 	private ReadPropertyFile r;
 	private boolean elevatorLampArray[];
@@ -39,6 +39,7 @@ public class ElevatorData {
 		upQueue = new ArrayList<>();
 		downQueue = new ArrayList<>();
 		this.currentFloor = currentFloor;
+		this.destination = -1;
 		direction = Direction.STOPPED;
 		r = new ReadPropertyFile();
 		this.error = 0;
@@ -48,6 +49,10 @@ public class ElevatorData {
 		}
 		this.timestamp = " ";
 		this.status = "waiting";
+	}
+
+	public ElevatorData() {
+		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -200,10 +205,24 @@ public class ElevatorData {
 	}
 
 	/**
-	 * Set the timestamp
+	 * Set the status
 	 */
 	public void setStatus(String status) {
 		this.status = status;
+	}
+	
+	/**
+	 * @return destination
+	 */
+	public int getDestination() {
+		return this.destination;
+	}
+
+	/**
+	 * Set the status
+	 */
+	public void setDestination(int destination) {
+		this.destination = destination;
 	}
 
 	/**
