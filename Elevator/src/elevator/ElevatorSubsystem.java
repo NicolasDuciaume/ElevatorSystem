@@ -280,18 +280,21 @@ public class ElevatorSubsystem implements Runnable {
                     System.out.println(name + " Door is stuck");
                                      
                 	//Timing for the error
-                    if (System.nanoTime() >= (time_open_close_doors + time)) { //if doors fully reset
-                    	msg2 =  name + "-doorReset-" + this.currFloor;
-                    	currentState = ElevatorStates.INITIAL_STATE;
-                    	sendElevatorMessage(msg2);	
-                    } else {//Keep sending doors opening to scheduler till the doors are fully open
+                    if (System.nanoTime() < (time_open_close_doors + time)) { //if doors fully reset
                         System.out.println(name + " reseting Door");
-                        msg2 =  name + "-error-" + this.currFloor;
+                        msg2 =  name + "-doorReseting-" + this.currFloor;
                         sendElevatorMessage(msg2);
                         //Recursively set the same state till doors are completely open
                         currentState = ElevatorStates.STATE_5;
+
+                    } else {//Keep sending doors opening to scheduler till the doors are fully open
+                        System.out.print("wtf");
+                        msg2 =  name + "-doorReset-" + this.currFloor;
+                        errorSelect = 0;
+                        currentState = ElevatorStates.INITIAL_STATE;
+                        sendElevatorMessage(msg2);
                     }
-                    //break;
+
                 } else if (errorSelect == -2) {//if fatal error: stuck between floors
                     //Send the data to the scheduler about which floor is elevator stuck on
                     System.out.println(name + " Stuck at floor " + this.currFloor);
@@ -336,7 +339,7 @@ public class ElevatorSubsystem implements Runnable {
             this.stateMachine();
 
             try {
-                Thread.sleep(1500L);
+                Thread.sleep(50L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
