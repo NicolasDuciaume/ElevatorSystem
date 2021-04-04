@@ -3,10 +3,9 @@ package elevator;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Random;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Scheduler handles communication between Elevator and Floors using a state
@@ -30,6 +29,7 @@ public class Scheduler {
     private InetAddress addressFloor;
     private ArrayList<ElevatorData> elevators;
     private ArrayList<ElevatorData> elevatorsStuck;
+    private ArrayList<String> timeStamps;
     private int waiting = 0;
     private int elevatorBeingUsed = 0;
     private int maxElevator = 0;
@@ -65,6 +65,7 @@ public class Scheduler {
 
         elevators = new ArrayList<>();
         elevatorsStuck = new ArrayList<>();
+        timeStamps = new ArrayList<>();
         
         view = new ElevatorView(this);
 
@@ -81,6 +82,19 @@ public class Scheduler {
 //    private void setView(ElevatorView e) {
 //    	this.view = e;
 //    }
+
+    public void updateTimeStamp(int elevatorNum){
+        timeStamps.set(elevatorNum,getTime());
+    }
+
+    private String getTime() {
+        Date date = new Date();
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSS");
+        formatter.setTimeZone(TimeZone.getTimeZone("EST"));
+        String dateFormatted = formatter.format(date);
+
+        return dateFormatted;
+    }
 
     /**
      * Changes the number of elevator being used
@@ -216,10 +230,13 @@ public class Scheduler {
         		temp = e;
         	}
         }
+        int elevatorNum = Integer.parseInt(String.valueOf(temp.getName().charAt(temp.getName().length()-1)));
+        timeStamps.set(elevatorNum-1,getTime());
+
      // Set time stamp of current message
 //        int timestampIndex = splitElevatorMsg.length - 1;
 //        temp.setTimestamp(splitElevatorMsg[timestampIndex]);
-                
+
         // If message was not blank and was split into an array
         // then append the packet string to the message depending
         // on the info contained within message
@@ -674,6 +691,10 @@ public class Scheduler {
             }
         }
 
+        for(int i = 0; i < elevators.size(); i++){
+            timeStamps.add(getTime());
+        }
+
         //prints out the floor and elevator ports and address
         System.out.println("Floor port is: " + portFloor + " and address is: " + addressFloor);
         for (int z = 0; z < elevators.size(); z++) {
@@ -761,6 +782,10 @@ public class Scheduler {
 
     public void setElevators(ArrayList<ElevatorData> e) {
         this.elevators = e;
+    }
+
+    public ArrayList<String> getTimeStamps() {
+        return timeStamps;
     }
 
     /**

@@ -1,9 +1,8 @@
 package elevator;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
 
 /**
  * Data structure that hold all the properties of the Elevator
@@ -191,13 +190,6 @@ public class ElevatorData {
 	}
 
 	/**
-	 * Set the timestamp
-	 */
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
-	}
-
-	/**
 	 * @return status
 	 */
 	public String getStatus() {
@@ -223,6 +215,10 @@ public class ElevatorData {
 	 */
 	public void setDestination(int destination) {
 		this.destination = destination;
+	}
+
+	public void setTimestamp(String timestamp) {
+		this.timestamp = timestamp;
 	}
 
 	/**

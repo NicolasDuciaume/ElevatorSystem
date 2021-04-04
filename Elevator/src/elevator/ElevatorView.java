@@ -97,12 +97,14 @@ public class ElevatorView extends JFrame {
 	 */
 	public void refresh() {
 		ArrayList<ElevatorData> elevators = model.getElevators();
+		ArrayList<String> timestamps = model.getTimeStamps();
 		
 		System.out.println("in refresh()");
 		
 		// Updating each property of the elevator
 		for(ElevatorData e : elevators) {
 			String num = e.getName().split("Elevator")[1];
+			e.setTimestamp(timestamps.get(Integer.parseInt(num) - 1));
 			System.out.println(num);
 			setProperty((Integer.parseInt(num) - 1), e);
 		}
@@ -110,7 +112,7 @@ public class ElevatorView extends JFrame {
 
 	public static void main(String[] args) {
 		Scheduler scheduler = new Scheduler();
-				
+
 		new ElevatorView(scheduler);
 
 	}
