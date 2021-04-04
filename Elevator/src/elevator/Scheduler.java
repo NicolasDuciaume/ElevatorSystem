@@ -1,6 +1,7 @@
 package elevator;
 
 
+
 import java.io.IOException;
 import java.net.*;
 import java.text.DateFormat;
@@ -194,9 +195,13 @@ public class Scheduler {
                 //Sort the floor request to one of the elevators
                 checkPriority(Integer.parseInt(cut[1]), cut[2], Integer.parseInt(cut[3]));
             } else {//If error than select one of the elevators to handle error
-                int temp = rand.nextInt(elevators.size());
-//                System.out.println(temp);
-                elevators.get(temp).setError(Integer.parseInt(cut[1]));//Sets type of error
+            	int temp;
+                do { //looping until it gets an elevator that is not erroring out
+                	temp = rand.nextInt(elevators.size());
+                }while(elevators.get(temp).getError() != 0);
+                
+            	elevators.get(temp).setError(Integer.parseInt(cut[1]));//Sets type of error
+                		
             }
             // TODO: Need to figure out the direction to go to the floor where we pick up
             // people
@@ -232,10 +237,6 @@ public class Scheduler {
         }
         int elevatorNum = Integer.parseInt(String.valueOf(temp.getName().charAt(temp.getName().length()-1)));
         timeStamps.set(elevatorNum-1,getTime());
-
-     // Set time stamp of current message
-//        int timestampIndex = splitElevatorMsg.length - 1;
-//        temp.setTimestamp(splitElevatorMsg[timestampIndex]);
 
         // If message was not blank and was split into an array
         // then append the packet string to the message depending
@@ -317,19 +318,30 @@ public class Scheduler {
                         waiting--;
                     }
                 } else if (splitElevatorMsg[1].equals("error")) {
-                	temp.setStatus("error");
+                	System.out.println("got here");
+                	System.out.println("Error: " + temp.getError());
                 	if(temp.getError() == -1) {
                 		temp.setStatus("doors stuck");
-                		temp.setError(0);
-                	}else {
+                	}else if(temp.getError() == -2){
                 		temp.setStatus("stuck between floors");
+                		 elevatorsStuck.add(temp);
                 	}
-                    elevatorsStuck.add(elevators.get(elevatorBeingUsed));
+                	
                     if (mess.equals("")) {
                         mess = mess + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
                     } else {
                         //if message not empty, append data received from elevator to message
                         mess = mess + " " + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
+                        waiting--;
+                    }
+                } else if (splitElevatorMsg[1].equals("doorReset")) {
+                	temp.setStatus("doors reset");
+                	temp.setError(0);
+                    if (mess.equals("")) {
+                        mess = mess + splitElevatorMsg[0] + "-door_opening-" + splitElevatorMsg[2];
+                    } else {
+                        //if message not empty, append data received from elevator to message
+                        mess = mess + " " + splitElevatorMsg[0] + "-door_opening-" + splitElevatorMsg[2];
                         waiting--;
                     }
                 }
@@ -417,16 +429,17 @@ public class Scheduler {
 
         if (temp.getError() != 0) { //if sending error to elevator
             String e = "error " + temp.getError();
-            temp.setError(0);
+            //temp.setError(0);
             toSend = e.getBytes();
         } else {//if sending floor request to elevator
             int t = checkSend(temp); //get the floor to visit
-            temp.setDestination(t);
+            
             if (t == -1) { //if floor to visit is negative then, send wait message to elevator
                 String wait = "waiting";
                 toSend = wait.getBytes();
             } else { //if floor to visit is a valid floor than send direction and floor to the elevator
                 String dat = t + " " + temp.getDirection();
+                temp.setDestination(t);
                 toSend = dat.getBytes();
             }
         }

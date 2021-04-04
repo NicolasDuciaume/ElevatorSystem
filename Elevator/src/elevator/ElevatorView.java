@@ -1,5 +1,6 @@
 package elevator;
 
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -81,12 +82,12 @@ public class ElevatorView extends JFrame {
 			properties[2][column].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
 			properties[3][column].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
 			
-			System.out.println("setting destination");
+			//System.out.println("setting destination");
 			if(e.getDestination() != -1) {
-				System.out.println("dest is not -1");
+				//System.out.println("dest is not -1");
 				properties[4][column].setText("Destination: " + e.getDestination());
 			}else {
-				System.out.println("dest is -1");
+				//System.out.println("dest is -1");
 				properties[4][column].setText("Destination: None");
 			}
 	}
@@ -99,13 +100,11 @@ public class ElevatorView extends JFrame {
 		ArrayList<ElevatorData> elevators = model.getElevators();
 		ArrayList<String> timestamps = model.getTimeStamps();
 		
-		System.out.println("in refresh()");
-		
 		// Updating each property of the elevator
 		for(ElevatorData e : elevators) {
 			String num = e.getName().split("Elevator")[1];
 			e.setTimestamp(timestamps.get(Integer.parseInt(num) - 1));
-			System.out.println(num);
+			//System.out.println(num);
 			setProperty((Integer.parseInt(num) - 1), e);
 		}
 	}
