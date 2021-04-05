@@ -12,10 +12,10 @@ public class ElevatorView extends JFrame {
 
 	public static ReadPropertyFile r = new ReadPropertyFile();
 	private int columns = r.getNumElevators();
-	private int rows = 5; // number of properties
+	private int rows = 6; // number of properties
 	private JTextArea properties[][];
 	private Color bgCol;
-	private String propTitle[] = { "Elevator Name", "Timestamp", "Status", "Current Floor", "Destination" };
+	private String propTitle[] = { "Elevator Name", "Timestamp", "Status", "Current Floor", "Destination", "Direction Lamp" };
 
 	public ElevatorView(Scheduler model) {
 		super("Elevator");
@@ -60,7 +60,7 @@ public class ElevatorView extends JFrame {
 				properties[i][j].setForeground(Color.WHITE);
 				properties[i][j].setText(propTitle[i]);
 				properties[i][j].setBackground(bgCol);
-				
+
 				grid[i][j].add(properties[i][j]);
 
 				container.add(grid[i][j]);
@@ -89,6 +89,14 @@ public class ElevatorView extends JFrame {
 			}else {
 				//System.out.println("dest is -1");
 				properties[4][column].setText("Destination: None");
+			}
+
+			if(e.getDirection() == Direction.UP){
+				properties[5][column].setText("Direction Lamp: UP");
+			}else if(e.getDirection() == Direction.DOWN){
+				properties[5][column].setText("Direction Lamp: DOWN");
+			}else{
+				properties[5][column].setText("Direction Lamp: STOPPED");
 			}
 	}
 

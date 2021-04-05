@@ -339,7 +339,7 @@ public class ElevatorSubsystem implements Runnable {
             this.stateMachine();
 
             try {
-                Thread.sleep(50L);
+                Thread.sleep(1500L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
