@@ -79,6 +79,14 @@ public class ElevatorView extends JFrame {
 	private void setProperty(int column, ElevatorData e) {		
 			properties[0][column].setText("Elevator Name: " + e.getName());
 			properties[1][column].setText("Timestamp: " + e.getTimestamp());
+			if(e.getStatus().contains("doorstuck") || e.getStatus().contains("reset")){
+				properties[2][column].setBackground(Color.RED);
+//				properties[2][column].setForeground(Color.RED);
+			}else if(e.getStatus().contains("between floors")){
+				properties[2][column].setBackground(Color.RED);
+			} else{
+				properties[2][column].setBackground(bgCol);
+			}
 			properties[2][column].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
 			properties[3][column].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
 			

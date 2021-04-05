@@ -288,7 +288,6 @@ public class ElevatorSubsystem implements Runnable {
                         currentState = ElevatorStates.STATE_5;
 
                     } else {//Keep sending doors opening to scheduler till the doors are fully open
-                        System.out.print("wtf");
                         msg2 =  name + "-doorReset-" + this.currFloor;
                         errorSelect = 0;
                         currentState = ElevatorStates.INITIAL_STATE;
