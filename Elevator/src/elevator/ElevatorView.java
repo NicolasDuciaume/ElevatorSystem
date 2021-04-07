@@ -2,6 +2,8 @@ package elevator;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 public class ElevatorView extends JFrame {
@@ -20,6 +22,7 @@ public class ElevatorView extends JFrame {
 	private String propTitle[] = { "Elevator Name", "Timestamp", "Status", "Current Floor", "Destination",
 			"Direction Lamp" };
 	private Image elevatorImage;
+	private int[] framesOpened;
 
 	public ElevatorView(Scheduler model) {
 		super("Elevator");
@@ -66,11 +69,49 @@ public class ElevatorView extends JFrame {
 		
 		elevatorImage = new ImageIcon(this.getClass().getResource("elevator_image.png")).getImage();
 		Image elevator = elevatorImage.getScaledInstance(width/columns, height/rows, java.awt.Image.SCALE_SMOOTH);
-		
-		grid[rows-1][1].setIcon(new ImageIcon(elevator));
-		grid[rows-1][2].setIcon(new ImageIcon(elevator));
-		grid[rows-1][3].setIcon(new ImageIcon(elevator));
-		grid[rows-1][4].setIcon(new ImageIcon(elevator));
+
+		final JFrame[] j = new JFrame[4];
+		for(int i = 0; i < j.length; i++){
+			j[i] = new JFrame();
+		}
+
+		for(int i = 0; i < r.getNumElevators(); i++){
+			grid[rows-1][i+1].setIcon(new ImageIcon(elevator));
+			String elevatorTitle = "Elevator " + (i+1);
+			int index = i;
+			grid[rows-1][i+1].addMouseListener(new MouseListener() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if(j[index].isVisible()) {
+					}else {
+						System.out.println("Mouse Clicked");
+						j[index].setTitle(elevatorTitle);
+						j[index].setSize(400, 400);
+						j[index].setVisible(true);
+					}
+				}
+
+				@Override
+				public void mousePressed(MouseEvent e) {
+
+				}
+
+				@Override
+				public void mouseReleased(MouseEvent e) {
+
+				}
+
+				@Override
+				public void mouseEntered(MouseEvent e) {
+
+				}
+
+				@Override
+				public void mouseExited(MouseEvent e) {
+
+				}
+			});
+		}
 		
 	}
 	
@@ -116,9 +157,7 @@ public class ElevatorView extends JFrame {
 
 	/**
 	 * Setting properties of each elevator
-	 * 
-	 * @param column
-	 * @param e
+	 *
 	 */
 //	private void setProperty(int column, ElevatorData e) {
 //		properties[0][column].setText("Elevator Name: " + e.getName());
