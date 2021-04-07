@@ -317,8 +317,6 @@ public class Scheduler {
                         waiting--;
                     }
                 } else if (splitElevatorMsg[1].equals("error")) {
-                	System.out.println("got here");
-                	System.out.println("Error: " + temp.getError());
                 	if(temp.getError() == -1) {
                 		temp.setStatus("doors stuck");
                 	}else if(temp.getError() == -2){
@@ -454,7 +452,7 @@ public class Scheduler {
                 toSend = wait.getBytes();
             } else { //if floor to visit is a valid floor than send direction and floor to the elevator
                 String dat = t + " " + temp.getDirection();
-                temp.setDestination(t);
+                temp.addDestination(t);
                 toSend = dat.getBytes();
             }
         }

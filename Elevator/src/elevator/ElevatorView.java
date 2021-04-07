@@ -10,23 +10,31 @@ public class ElevatorView extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private Scheduler model;
 	private Container container;
-
+	
 	public static ReadPropertyFile r = new ReadPropertyFile();
 	private int columns = r.getNumElevators() + 1;
 	private int rows = r.getNumFloors();
 	private int width = 500, height = 1000;
 
-//	private JLabel properties[][];
+	private int currFloor[];
 	private JLabel grid[][];
 	private Color bgCol;
 	private String propTitle[] = { "Elevator Name", "Timestamp", "Status", "Current Floor", "Destination",
 			"Direction Lamp" };
+	
+	private int currentFloor = rows - 1; 
+	private String imageName = "";
+	private String currImageName = "";
 	private Image elevatorImage;
 	private int[] framesOpened;
 
 	public ElevatorView(Scheduler model) {
 		super("Elevator");
-
+		currFloor = new int[columns - 1];
+		
+		for(int i = 0; i < columns - 1; i++){
+			currFloor[i] = rows - 1;
+		}
 		this.model = model;
 
 		// background color
@@ -118,9 +126,9 @@ public class ElevatorView extends JFrame {
 	/**
 	 * Placing elevator images in the appropriate spot
 	 */
-	private void placeElevator(int floorNum, int elevatorNum) {
-		elevatorImage = new ImageIcon(this.getClass().getResource("elevator_image.png")).getImage();
-		Image elevator = elevatorImage.getScaledInstance(110, 110, java.awt.Image.SCALE_SMOOTH);
+	private void placeElevator(int floorNum, int elevatorNum, String imageName) {
+		elevatorImage = new ImageIcon(this.getClass().getResource(imageName)).getImage();
+		Image elevator = elevatorImage.getScaledInstance(width/columns, height/rows, java.awt.Image.SCALE_SMOOTH);
 		
 		grid[floorNum][elevatorNum].setIcon(new ImageIcon(elevator));
 	}
@@ -132,14 +140,6 @@ public class ElevatorView extends JFrame {
 	public void refresh() {
 		ArrayList<ElevatorData> elevators = model.getElevators();
 		ArrayList<String> timestamps = model.getTimeStamps();
-
-		// Clearing all elevator grid squares before updating with latest values
-		for (int i = 1; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
-				grid[i][j].setIcon(null);
-				grid[i][j].setOpaque(false);
-			}
-		}
 		
 		// Updating each property of the elevator
 		for (ElevatorData e : elevators) {
@@ -150,8 +150,34 @@ public class ElevatorView extends JFrame {
 				grid[rows - e.getDestination()][num].setBackground(Color.YELLOW);
 				grid[rows - e.getDestination()][num].setOpaque(true);
 			}
-			// Update elevator's current location
-			placeElevator(rows - e.getCurrentFloor(), num);
+			
+			
+			
+			if(e.getStatus().contains("doors")) {
+				imageName = "elevator_doors_stuck.png";
+			}else if(e.getStatus().contains("stuck between floors")) {
+				imageName = "elevator_error.png";
+			}else if(e.getStatus().contains("open") || e.getStatus().contains("clos")){
+				imageName = "elevator_door_open.png";
+			}else {
+				imageName = "elevator_image.png";
+			}
+		
+			
+			System.out.println(e.getName() + ": " + e.getStatus());
+			
+			if(e.getStatus().contains("arr") || e.getStatus().contains("wait")){
+				System.out.println();
+				grid[currFloor[num-1]][num].setOpaque(false);
+			}
+				
+			if(currFloor[num-1] != rows - e.getCurrentFloor() || currImageName != imageName)
+			{			
+				grid[currFloor[num-1]][num].setIcon(null);
+				placeElevator(rows - e.getCurrentFloor(), num, imageName);
+				currFloor[num-1] = rows - e.getCurrentFloor();
+				currImageName = imageName;
+			}
 		}
 	}
 
@@ -159,37 +185,7 @@ public class ElevatorView extends JFrame {
 	 * Setting properties of each elevator
 	 *
 	 */
-//	private void setProperty(int column, ElevatorData e) {
-//		properties[0][column].setText("Elevator Name: " + e.getName());
-//		properties[1][column].setText("Timestamp: " + e.getTimestamp());
-//		if (e.getStatus().contains("doorstuck") || e.getStatus().contains("reset")) {
-//			properties[2][column].setBackground(Color.RED);
-//		} else if (e.getStatus().contains("between floors")) {
-//			properties[2][column].setBackground(Color.RED);
-//		} else {
-//			properties[2][column].setBackground(bgCol);
-//		}
-//		properties[2][column].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
-//		properties[3][column].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
-//
-//		// System.out.println("setting destination");
-//		if (e.getDestination() != -1) {
-//			// System.out.println("dest is not -1");
-//			properties[4][column].setText("Destination: " + e.getDestination());
-//		} else {
-//			// System.out.println("dest is -1");
-//			properties[4][column].setText("Destination: None");
-//		}
-//
-//		if (e.getDirection() == Direction.UP) {
-//			properties[5][column].setText("Direction Lamp: UP");
-//		} else if (e.getDirection() == Direction.DOWN) {
-//			properties[5][column].setText("Direction Lamp: DOWN");
-//		} else {
-//			properties[5][column].setText("Direction Lamp: STOPPED");
-//		}
-//	}
-	
+
 	public static void main(String[] args) {
 		Scheduler scheduler = new Scheduler();
 
@@ -197,3 +193,4 @@ public class ElevatorView extends JFrame {
 
 	}
 }
+	

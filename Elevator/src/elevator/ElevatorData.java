@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * Data structure that hold all the properties of the Elevator
  *
- * @author Nicolas Duciaume 101124713
+ * @author Nicolas Duciaume 10112471
  */
 public class ElevatorData {
 	String name = "";
@@ -16,7 +16,7 @@ public class ElevatorData {
 	private InetAddress address;
 	private ArrayList<Integer> upQueue;
 	private ArrayList<Integer> downQueue;
-	private int currentFloor, destination;
+	private int currentFloor, currDestination;
 	private Direction direction;
 	private ReadPropertyFile r;
 	private boolean elevatorLampArray[];
@@ -24,6 +24,8 @@ public class ElevatorData {
 	private String timestamp;
 	private String status;
 
+	private ArrayList<Integer> destinations;
+	
 	/**
 	 * Initializes all variables
 	 *
@@ -38,12 +40,14 @@ public class ElevatorData {
 		this.address = address;
 		upQueue = new ArrayList<>();
 		downQueue = new ArrayList<>();
+		destinations = new ArrayList<>();
 		this.currentFloor = currentFloor;
-		this.destination = -1;
+		this.currDestination = -1;
 		direction = Direction.STOPPED;
 		r = new ReadPropertyFile();
 		this.error = 0;
 		this.elevatorLampArray = new boolean[r.getNumFloors()];
+		
 		for (int i = 0; i < r.getNumFloors(); i++) {
 			elevatorLampArray[i] = false;
 		}
@@ -202,22 +206,43 @@ public class ElevatorData {
 	 */
 	public void setStatus(String status) {
 		this.status = status;
+		setDestination();
 	}
 	
 	/**
 	 * @return destination
 	 */
 	public int getDestination() {
-		return this.destination;
+		return this.currDestination;
 	}
 
 	/**
+	 * 
 	 * Set the status
 	 */
-	public void setDestination(int destination) {
-		this.destination = destination;
+	public void addDestination(int destination) {
+		this.destinations.add(destination);
+		if(destinations.size() == 1) {
+			currDestination = destination;
+		}
 	}
-
+	
+	/**
+	 * 
+	 * Set the status
+	 */
+	private void setDestination() {
+		if(this.status.contains("arr"))
+			{
+				destinations.remove(0);
+				if(destinations.size() != 0) {
+					currDestination = destinations.get(0);
+				}else {
+					currDestination = -1; 
+				}
+			}
+	}
+	
 	public void setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
 	}
