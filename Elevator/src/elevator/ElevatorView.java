@@ -26,7 +26,8 @@ public class ElevatorView extends JFrame {
 	private String imageName = "";
 	private String currImageName = "";
 	private Image elevatorImage;
-	private int[] framesOpened;
+	final JFrame[] elevatorFrames = new JFrame[r.getNumElevators()];
+	private JTextArea properties[];
 
 	public ElevatorView(Scheduler model) {
 		super("Elevator");
@@ -47,6 +48,8 @@ public class ElevatorView extends JFrame {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(width, height);
+
+		initializeElevatorFrames();
 
 		// Initialize grid
 		initializeGrid();
@@ -78,49 +81,95 @@ public class ElevatorView extends JFrame {
 		elevatorImage = new ImageIcon(this.getClass().getResource("elevator_image.png")).getImage();
 		Image elevator = elevatorImage.getScaledInstance(width/columns, height/rows, java.awt.Image.SCALE_SMOOTH);
 
-		final JFrame[] j = new JFrame[4];
-		for(int i = 0; i < j.length; i++){
-			j[i] = new JFrame();
-		}
-
 		for(int i = 0; i < r.getNumElevators(); i++){
 			grid[rows-1][i+1].setIcon(new ImageIcon(elevator));
-			String elevatorTitle = "Elevator " + (i+1);
-			int index = i;
-			grid[rows-1][i+1].addMouseListener(new MouseListener() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					if(j[index].isVisible()) {
-					}else {
-						System.out.println("Mouse Clicked");
-						j[index].setTitle(elevatorTitle);
-						j[index].setSize(400, 400);
-						j[index].setVisible(true);
-					}
-				}
-
-				@Override
-				public void mousePressed(MouseEvent e) {
-
-				}
-
-				@Override
-				public void mouseReleased(MouseEvent e) {
-
-				}
-
-				@Override
-				public void mouseEntered(MouseEvent e) {
-
-				}
-
-				@Override
-				public void mouseExited(MouseEvent e) {
-
-				}
-			});
+			addMouseListener(rows-1,i+1);
 		}
-		
+
+	}
+
+	public void addMouseListener(int floor, int elevator){
+		String elevatorTitle = "Elevator " + elevator;
+		grid[floor][elevator].addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+//				if(j[elevator-1].isVisible()) {
+//				}else {
+//					System.out.println("Mouse Clicked");
+//					j[elevator-1].setTitle(elevatorTitle);
+//					j[elevator-1].setSize(400, 400);
+//					j[elevator-1].setVisible(true);
+//				}
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(elevatorFrames[elevator-1].isVisible()) {
+				}else {
+					System.out.println("Mouse Pressed");
+					elevatorFrames[elevator-1].setTitle(elevatorTitle);
+					elevatorFrames[elevator-1].setSize(400, 400);
+					elevatorFrames[elevator-1].setVisible(true);
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+
+			}
+		});
+	}
+
+	public void removeMouseListener(int floor, int elevator){
+		MouseListener[] m = grid[floor][elevator].getMouseListeners();
+		grid[floor][elevator].removeMouseListener(m[0]);
+	}
+
+	public void initializeElevatorFrames(){
+		String propTitle[] = {"Timestamp", "Status", "Current Floor", "Destination" };
+		properties = new JTextArea[rows];
+
+		for(int i = 0; i < elevatorFrames.length; i++) {
+			elevatorFrames[i] = new JFrame();
+			elevatorFrames[i].setLayout(new GridLayout(propTitle.length, 1));
+			for(int j = 0; j < propTitle.length;j++) {
+				properties[j] = new JTextArea(propTitle[j]);
+				properties[j].setFont(new Font("Consolas", Font.BOLD, 20));
+				properties[j].setForeground(Color.WHITE);
+				properties[j].setText(propTitle[j]);
+				properties[j].setEditable(false);
+				properties[j].setBackground(bgCol);
+				elevatorFrames[i].add(properties[j]);
+			}
+		}
+	}
+
+	public void updateElevatorFrames(int frameNum,ElevatorData e){
+		properties[0].setText("Timestamp: " + e.getTimestamp());
+		properties[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
+		properties[2].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
+
+		System.out.println("setting destination");
+		if(e.getDestination() != -1) {
+			System.out.println("dest is not -1");
+			properties[3].setText("Destination: " + e.getDestination());
+		}else {
+			System.out.println("dest is -1");
+			properties[3].setText("Destination: None");
+		}
+		for(int i = 0; i < properties.length; i++){
+			elevatorFrames[frameNum].add(properties[i]);
+		}
 	}
 	
 	/**
@@ -132,7 +181,7 @@ public class ElevatorView extends JFrame {
 		
 		grid[floorNum][elevatorNum].setIcon(new ImageIcon(elevator));
 	}
-	
+
 	/**
 	 * Refreshes view with latest updates from the model
 	 * 
@@ -174,7 +223,10 @@ public class ElevatorView extends JFrame {
 			if(currFloor[num-1] != rows - e.getCurrentFloor() || currImageName != imageName)
 			{			
 				grid[currFloor[num-1]][num].setIcon(null);
+				removeMouseListener(currFloor[num-1],num);
 				placeElevator(rows - e.getCurrentFloor(), num, imageName);
+				addMouseListener(rows - e.getCurrentFloor(),num);
+//				updateElevatorFrames(num-1,e);
 				currFloor[num-1] = rows - e.getCurrentFloor();
 				currImageName = imageName;
 			}
