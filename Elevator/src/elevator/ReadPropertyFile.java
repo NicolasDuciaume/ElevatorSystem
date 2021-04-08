@@ -68,7 +68,7 @@ public class ReadPropertyFile {
     }
 
     /**
-     * Gets the time of opening and closing door form the config file
+     * Gets the time of opening and closing door from the config file
      *
      * @return the open/close door time
      */
@@ -77,13 +77,20 @@ public class ReadPropertyFile {
     }
 
     /**
-     * Gets the time an elevator takes from one floor to another form the config file
+     * Gets the time an elevator takes from one floor to another from the config file
      *
      * @return time between floors taken by the elevator
      */
     public long getTimeBetweenFloors() {
         return Long.parseLong(this.property.getProperty("time_between_floors_sec")) * NANOSEC;
     }
-
-
+    
+    /**
+     * Gets the path of the floor data json file from the config file
+     *
+     * @return path of json file where serialized floor data is stored
+     */
+    public String getJsonPath() {
+        return this.property.getProperty("json_path");
+    }
 }
