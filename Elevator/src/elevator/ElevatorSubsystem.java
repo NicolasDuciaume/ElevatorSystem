@@ -104,7 +104,6 @@ public class ElevatorSubsystem implements Runnable {
             e.printStackTrace();
             System.exit(1);
         }
-
     }
 
     /**

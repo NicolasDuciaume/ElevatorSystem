@@ -78,11 +78,12 @@ public class ElevatorView extends JFrame {
 		elevatorImage = new ImageIcon(this.getClass().getResource("elevator_image.png")).getImage();
 		Image elevator = elevatorImage.getScaledInstance(width/columns, height/rows, java.awt.Image.SCALE_SMOOTH);
 
-		final JFrame[] j = new JFrame[4];
-		for(int i = 0; i < j.length; i++){
-			j[i] = new JFrame();
+		final JFrame[] elevatorStatuses = new JFrame[r.getNumElevators()];
+		for(int i = 0; i < elevatorStatuses.length; i++){
+			elevatorStatuses[i] = new JFrame();
 		}
 
+		// Make elevators clickable
 		for(int i = 0; i < r.getNumElevators(); i++){
 			grid[rows-1][i+1].setIcon(new ImageIcon(elevator));
 			String elevatorTitle = "Elevator " + (i+1);
@@ -90,12 +91,12 @@ public class ElevatorView extends JFrame {
 			grid[rows-1][i+1].addMouseListener(new MouseListener() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					if(j[index].isVisible()) {
+					if(elevatorStatuses[index].isVisible()) {
 					}else {
 						System.out.println("Mouse Clicked");
-						j[index].setTitle(elevatorTitle);
-						j[index].setSize(400, 400);
-						j[index].setVisible(true);
+						elevatorStatuses[index].setTitle(elevatorTitle);
+						elevatorStatuses[index].setSize(400, 400);
+						elevatorStatuses[index].setVisible(true);
 					}
 				}
 
@@ -121,6 +122,52 @@ public class ElevatorView extends JFrame {
 			});
 		}
 		
+		// Make floors clickable
+		final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
+		for(int i = 0; i < floorStatuses.length; i++){
+			floorStatuses[i] = new JFrame();
+		}
+		
+		for(int i = 0; i < rows; i++){
+			int index = i;
+			grid[i][0].addMouseListener(new MouseListener() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if(floorStatuses[index].isVisible()) {
+					}else {
+						System.out.println("Mouse Clicked");
+						floorStatuses[index].setSize(400, 400);
+						floorStatuses[index].setTitle("Floor " + (rows - index));
+						floorStatuses[index].setVisible(true);
+					}
+				}
+
+				@Override
+				public void mousePressed(MouseEvent e) {
+					/*
+					 * update arrival sensors
+					 * and floor lamps
+					 * 
+					 */
+//					FloorSubsystem.getFloorLamps();
+				}
+
+				@Override
+				public void mouseReleased(MouseEvent e) {
+
+				}
+
+				@Override
+				public void mouseEntered(MouseEvent e) {
+
+				}
+
+				@Override
+				public void mouseExited(MouseEvent e) {
+
+				}
+			});
+		}
 	}
 	
 	/**
@@ -151,8 +198,6 @@ public class ElevatorView extends JFrame {
 				grid[rows - e.getDestination()][num].setOpaque(true);
 			}
 			
-			
-			
 			if(e.getStatus().contains("doors")) {
 				imageName = "elevator_doors_stuck.png";
 			}else if(e.getStatus().contains("stuck between floors")) {
@@ -162,9 +207,6 @@ public class ElevatorView extends JFrame {
 			}else {
 				imageName = "elevator_image.png";
 			}
-		
-			
-			System.out.println(e.getName() + ": " + e.getStatus());
 			
 			if(e.getStatus().contains("arr") || e.getStatus().contains("wait")){
 				System.out.println();
@@ -189,7 +231,7 @@ public class ElevatorView extends JFrame {
 	public static void main(String[] args) {
 		Scheduler scheduler = new Scheduler();
 
-		new ElevatorView(scheduler);
+//		new ElevatorView(scheduler);
 
 	}
 }
