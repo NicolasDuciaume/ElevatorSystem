@@ -145,7 +145,7 @@ public class ElevatorView extends JFrame {
 			for(int j = 0; j < propTitle.length;j++) {
 				properties[j] = new JTextArea(propTitle[j]);
 				properties[j].setFont(new Font("Consolas", Font.BOLD, 20));
-				properties[j].setForeground(Color.WHITE);
+				properties[j].setForeground(Color.BLACK);
 				properties[j].setText(propTitle[j]);
 				properties[j].setEditable(false);
 				properties[j].setBackground(bgCol);
@@ -155,21 +155,35 @@ public class ElevatorView extends JFrame {
 	}
 
 	public void updateElevatorFrames(int frameNum,ElevatorData e){
-		properties[0].setText("Timestamp: " + e.getTimestamp());
-		properties[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
-		properties[2].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
+		JFrame j = elevatorFrames[frameNum];
+		System.out.println("Components: " + j.getContentPane().getComponents().length);
+		Component[] textAreas = j.getContentPane().getComponents();
+		JTextArea[] update = new JTextArea[4];
+		for(int i = 0; i < textAreas.length; i++) {
+			update[i] = (JTextArea)textAreas[i];
+		}
+		System.out.println("Timestamp: " + e.getTimestamp());
+		update[0].setText("Timestamp: " + e.getTimestamp());
+		update[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
+		update[2].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
+
+//		properties[0].setText("Timestamp: " + e.getTimestamp());
+//		properties[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
+//		properties[2].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
 
 		System.out.println("setting destination");
 		if(e.getDestination() != -1) {
 			System.out.println("dest is not -1");
-			properties[3].setText("Destination: " + e.getDestination());
+			update[3].setText("Destination: " + e.getDestination());
+//			properties[3].setText("Destination: " + e.getDestination());
 		}else {
 			System.out.println("dest is -1");
-			properties[3].setText("Destination: None");
+			update[3].setText("Destination: None");
+//			properties[3].setText("Destination: None");
 		}
-		for(int i = 0; i < properties.length; i++){
-			elevatorFrames[frameNum].add(properties[i]);
-		}
+//		for(int i = 0; i < properties.length; i++){
+//			elevatorFrames[frameNum].add(properties[i]);
+//		}
 	}
 	
 	/**
@@ -193,6 +207,7 @@ public class ElevatorView extends JFrame {
 		// Updating each property of the elevator
 		for (ElevatorData e : elevators) {
 			int num = Integer.parseInt(e.getName().split("Elevator")[1]);
+			e.setTimestamp(timestamps.get(num - 1));
 			
 			// Highlight elevator's destination if it is set
 			if(e.getDestination() != -1) {
@@ -226,7 +241,7 @@ public class ElevatorView extends JFrame {
 				removeMouseListener(currFloor[num-1],num);
 				placeElevator(rows - e.getCurrentFloor(), num, imageName);
 				addMouseListener(rows - e.getCurrentFloor(),num);
-//				updateElevatorFrames(num-1,e);
+				updateElevatorFrames(num-1,e);
 				currFloor[num-1] = rows - e.getCurrentFloor();
 				currImageName = imageName;
 			}
