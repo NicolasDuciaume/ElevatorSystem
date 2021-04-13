@@ -334,7 +334,7 @@ public class ElevatorView extends JFrame {
 			// light up arrival sensors
 			if (!this.arrivalSensors.isEmpty()) {
 				for (int j = 0; j < this.arrivalSensors.size(); j++) {
-					ArrayList<Boolean> sensors = this.arrivalSensors.get(j);
+					ArrayList<Boolean> sensors = this.arrivalSensors.get(j+1);
 					if (sensors.get(i)) {
 						this.arrivalSensorGuis[i].setText("Arrival Sensor: ARRIVED");
 						this.arrivalSensorGuis[i].setForeground(Color.GREEN);
@@ -350,8 +350,8 @@ public class ElevatorView extends JFrame {
 			 * true, false}}
 			 */
 			if (!this.floorLamps.isEmpty()) {
-				for (int j = 0; i < this.floorLamps.size(); j++) {
-					Boolean[] lamps = floorLamps.get(j);
+				for (int j = 0; j < this.floorLamps.size(); j++) {
+					Boolean[] lamps = floorLamps.get(j+1);
 					if (lamps[0]) {
 						this.floorLampsGuis[i][0].setForeground(Color.GREEN);
 					} else {
