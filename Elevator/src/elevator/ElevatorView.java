@@ -27,6 +27,7 @@ public class ElevatorView extends JFrame {
 	private String currImageName = "";
 	private Image elevatorImage;
 	final JFrame[] elevatorFrames = new JFrame[r.getNumElevators()];
+	final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
 	private JTextArea properties[];
 
 	public ElevatorView(Scheduler model) {
@@ -83,12 +84,17 @@ public class ElevatorView extends JFrame {
 
 		for(int i = 0; i < r.getNumElevators(); i++){
 			grid[rows-1][i+1].setIcon(new ImageIcon(elevator));
-			addMouseListener(rows-1,i+1);
+			addElevatorMouseListener(rows-1,i+1);
 		}
 
+//		final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
+		for(int i = 0; i < floorStatuses.length; i++){
+			floorStatuses[i] = new JFrame();
+			addFloorMouseListener(i);
+		}
 	}
-
-	public void addMouseListener(int floor, int elevator){
+		
+	public void addElevatorMouseListener(int floor, int elevator){
 		String elevatorTitle = "Elevator " + elevator;
 		grid[floor][elevator].addMouseListener(new MouseListener() {
 			@Override
@@ -130,6 +136,47 @@ public class ElevatorView extends JFrame {
 		});
 	}
 
+	/**
+	 * Make floor frames clickable
+	 * 
+	 * @param floorIndex
+	 */
+	public void addFloorMouseListener(int floorIndex){
+		grid[floorIndex][0].addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(floorStatuses[floorIndex].isVisible()) {
+				}else {
+					System.out.println("Mouse Clicked");
+					floorStatuses[floorIndex].setSize(400, 400);
+					floorStatuses[floorIndex].setTitle("Floor " + (rows - floorIndex));
+					floorStatuses[floorIndex].setVisible(true);
+				}
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+
+			}
+		});
+	}
+	
 	public void removeMouseListener(int floor, int elevator){
 		MouseListener[] m = grid[floor][elevator].getMouseListeners();
 		grid[floor][elevator].removeMouseListener(m[0]);
@@ -154,6 +201,25 @@ public class ElevatorView extends JFrame {
 		}
 	}
 
+//	HashMap<Integer, String> map = null;
+//    try
+//    {
+//       FileInputStream fis = new FileInputStream("hashmap.ser");
+//       ObjectInputStream ois = new ObjectInputStream(fis);
+//       map = (HashMap) ois.readObject();
+//       ois.close();
+//       fis.close();
+//    }catch(IOException ioe)
+//    {
+//       ioe.printStackTrace();
+//       return;
+//    }catch(ClassNotFoundException c)
+//    {
+//       System.out.println("Class not found");
+//       c.printStackTrace();
+//       return;
+//    }
+//    
 	public void updateElevatorFrames(int frameNum,ElevatorData e){
 		properties[0].setText("Timestamp: " + e.getTimestamp());
 		properties[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
@@ -200,8 +266,6 @@ public class ElevatorView extends JFrame {
 				grid[rows - e.getDestination()][num].setOpaque(true);
 			}
 			
-			
-			
 			if(e.getStatus().contains("doors")) {
 				imageName = "elevator_doors_stuck.png";
 			}else if(e.getStatus().contains("stuck between floors")) {
@@ -211,7 +275,6 @@ public class ElevatorView extends JFrame {
 			}else {
 				imageName = "elevator_image.png";
 			}
-		
 			
 			System.out.println(e.getName() + ": " + e.getStatus());
 			
@@ -225,7 +288,7 @@ public class ElevatorView extends JFrame {
 				grid[currFloor[num-1]][num].setIcon(null);
 				removeMouseListener(currFloor[num-1],num);
 				placeElevator(rows - e.getCurrentFloor(), num, imageName);
-				addMouseListener(rows - e.getCurrentFloor(),num);
+				addElevatorMouseListener(rows - e.getCurrentFloor(),num);
 //				updateElevatorFrames(num-1,e);
 				currFloor[num-1] = rows - e.getCurrentFloor();
 				currImageName = imageName;
@@ -241,7 +304,7 @@ public class ElevatorView extends JFrame {
 	public static void main(String[] args) {
 		Scheduler scheduler = new Scheduler();
 
-		new ElevatorView(scheduler);
+//		new ElevatorView(scheduler);
 
 	}
 }
