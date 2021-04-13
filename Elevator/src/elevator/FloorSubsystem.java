@@ -178,6 +178,11 @@ public class FloorSubsystem implements Runnable {
 		} else {
 			System.out.println("Arrival Sensor on Floor " + floor + " for Elevator " + elevatorNum + " turned off!");
 		}
+
+		for(int x = 0; x <this.arrivalSensors.size(); x++){
+			System.out.println(this.arrivalSensors.get(x));
+			//System.out.println("cunt");
+		}
 		this.serialize();
 	}
 

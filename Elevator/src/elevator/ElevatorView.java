@@ -59,7 +59,7 @@ public class ElevatorView extends JFrame {
 		setSize(width, height);
 
 		initializeMaps();
-		
+
 		initializeElevatorFrames();
 		initializeFloorFrames();
 
@@ -118,7 +118,7 @@ public class ElevatorView extends JFrame {
 			arrivalSensors.put(i + 1, b);
 		}
 	}
-	
+
 	public void addElevatorMouseListener(int floor, int elevator) {
 		String elevatorTitle = "Elevator " + elevator;
 		grid[floor][elevator].addMouseListener(new MouseListener() {
@@ -219,6 +219,12 @@ public class ElevatorView extends JFrame {
 
 			this.arrivalSensors = (HashMap) ois1.readObject();
 			this.floorLamps = (HashMap) ois2.readObject();
+
+			/*for(int x = 0; x <this.arrivalSensors.size(); x++){
+				System.out.println(this.arrivalSensors.get(x));
+				//System.out.println("cunt");
+			}*/
+
 
 			fis1.close();
 			fis2.close();
@@ -332,15 +338,18 @@ public class ElevatorView extends JFrame {
 	private void updateFloorFrames() {
 		for (int i = 0; i < this.floorStatuses.length; i++) {
 			// light up arrival sensors
+
 			if (!this.arrivalSensors.isEmpty()) {
-				for (int j = 0; j < this.arrivalSensors.size(); j++) {
+
+
+				for (int j = 1; j <= this.arrivalSensors.size(); j++) {
 					ArrayList<Boolean> sensors = this.arrivalSensors.get(j);
-					if (sensors.get(i)) {
-						this.arrivalSensorGuis[i].setText("Arrival Sensor: ARRIVED");
-						this.arrivalSensorGuis[i].setForeground(Color.GREEN);
+					if (sensors.contains(true)) {
+						this.arrivalSensorGuis[rows-j].setText("Arrival Sensor: ARRIVED");
+						this.arrivalSensorGuis[rows-j].setForeground(Color.GREEN);
 					} else {
-						this.arrivalSensorGuis[i].setText("Arrival Sensor");
-						this.arrivalSensorGuis[i].setForeground(Color.BLACK);
+						this.arrivalSensorGuis[rows-j].setText("Arrival Sensor");
+						this.arrivalSensorGuis[rows-j].setForeground(Color.BLACK);
 					}
 				}
 			}
@@ -349,19 +358,25 @@ public class ElevatorView extends JFrame {
 			 * light up floor lamps if value is true format: {floor_num: {true, false,...,
 			 * true, false}}
 			 */
+
+
 			if (!this.floorLamps.isEmpty()) {
-				for (int j = 0; i < this.floorLamps.size(); j++) {
-					Boolean[] lamps = floorLamps.get(j);
-					if (lamps[0]) {
-						this.floorLampsGuis[i][0].setForeground(Color.GREEN);
-					} else {
-						this.floorLampsGuis[i][0].setForeground(Color.BLACK);
-					}
-					if (lamps[1]) {
-						this.floorLampsGuis[i][1].setForeground(Color.GREEN);
-					} else {
-						this.floorLampsGuis[i][1].setForeground(Color.BLACK);
-					}
+				//System.out.println(this.floorLamps.get(0));
+				Boolean[] lamps = new Boolean[2];
+				for (int j = 1; j <= this.floorLamps.size(); j++) {
+						lamps[0] = floorLamps.get(j)[0];
+						lamps[1] = floorLamps.get(j)[1];
+						if (lamps[0]) {
+							this.floorLampsGuis[i][0].setForeground(Color.GREEN);
+						} else {
+							this.floorLampsGuis[i][0].setForeground(Color.BLACK);
+						}
+						if (lamps[1]) {
+							this.floorLampsGuis[i][1].setForeground(Color.GREEN);
+						} else {
+							this.floorLampsGuis[i][1].setForeground(Color.BLACK);
+						}
+
 				}
 			}
 		}
