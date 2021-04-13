@@ -202,8 +202,8 @@ public class FloorSubsystem implements Runnable {
 	 */
 	private void serialize() {
 		try {
-			FileOutputStream fos1 = new FileOutputStream("arrival_sensors.json");
-			FileOutputStream fos2 = new FileOutputStream("floor_lamps.json");
+			FileOutputStream fos1 = new FileOutputStream("arrival_sensors.ser");
+			FileOutputStream fos2 = new FileOutputStream("floor_lamps.ser");
 			
 			ObjectOutputStream oos1 = new ObjectOutputStream(fos1);
 			ObjectOutputStream oos2 = new ObjectOutputStream(fos2);

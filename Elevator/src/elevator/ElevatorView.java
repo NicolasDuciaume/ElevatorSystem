@@ -31,8 +31,10 @@ public class ElevatorView extends JFrame {
 	final JFrame[] elevatorFrames = new JFrame[r.getNumElevators()];
 	final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
 	private JTextArea properties[];
-	private HashMap<Integer, String> arrivalSensors = null;
-	private HashMap<Integer, String> floorLamps = null;
+	private JLabel floorLampsGuis[][] = new JLabel[rows][rows];
+	private JLabel arrivalSensorGuis[] = new JLabel[rows];
+	private HashMap<Integer, ArrayList<Boolean>> arrivalSensors = null;
+	private HashMap<Integer, Boolean[]> floorLamps = null;
 
 	public ElevatorView(Scheduler model) {
 		super("Elevator");
@@ -55,6 +57,7 @@ public class ElevatorView extends JFrame {
 		setSize(width, height);
 
 		initializeElevatorFrames();
+		initializeFloorFrames();
 
 		// Initialize grid
 		initializeGrid();
@@ -103,13 +106,6 @@ public class ElevatorView extends JFrame {
 		grid[floor][elevator].addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-//				if(j[elevator-1].isVisible()) {
-//				}else {
-//					System.out.println("Mouse Clicked");
-//					j[elevator-1].setTitle(elevatorTitle);
-//					j[elevator-1].setSize(400, 400);
-//					j[elevator-1].setVisible(true);
-//				}
 			}
 
 			@Override
@@ -196,29 +192,28 @@ public class ElevatorView extends JFrame {
 	 */
 	private void deserializeFloorSubsystem() {
 		
-//	      try
-//	      {
-//	         FileInputStream fis1= new FileInputStream("arrival_sensors.json");
-//	         FileInputStream fis2= new FileInputStream("floor_lamps.json");
-//	         
-//	         ObjectInputStream ois1 = new ObjectInputStream(fis1);
-//	         ObjectInputStream ois2 = new ObjectInputStream(fis2);
-//	         
-//	         this.arrivalSensors = (HashMap) ois1.readObject();
-//	         this.floorLamps = (HashMap) ois1.readObject();
-//	         
-//	         ois1.close();
-//	         fis1.close();
-//	      }catch(IOException ioe)
-//	      {
-//	         ioe.printStackTrace();
-//	         return;
-//	      }catch(ClassNotFoundException c)
-//	      {
-//	         System.out.println("Class not found");
-//	         c.printStackTrace();
-//	         return;
-//	      }
+	      try
+	      {
+	         FileInputStream fis1 = new FileInputStream("arrival_sensors.ser");
+	         FileInputStream fis2 = new FileInputStream("floor_lamps.ser");
+	         
+	         ObjectInputStream ois1 = new ObjectInputStream(fis1);
+	         ObjectInputStream ois2 = new ObjectInputStream(fis2);
+	         
+	         this.arrivalSensors = (HashMap) ois1.readObject();
+	         this.floorLamps = (HashMap) ois2.readObject();
+	         
+	         
+	         fis1.close();
+	         fis2.close();
+	         
+	         ois1.close();
+	         ois2.close();
+	         
+	      }catch(Exception e) {
+	         e.printStackTrace();
+	         return;
+	      }
 	}
 	
 	/**
@@ -248,20 +243,34 @@ public class ElevatorView extends JFrame {
 	 */
 	public void initializeFloorFrames(){
 		String propTitle[] = {"Arrival Sensor", "Floor Lamps" };
-		properties = new JTextArea[rows];
+		
+		for(int i = 0; i < floorStatuses.length; i++) {
+			floorStatuses[i] = new JFrame();
+			floorStatuses[i].setLayout(new GridLayout(propTitle.length, 1));
+			floorStatuses[i].setBackground(this.bgCol);
+			
+			// Setting up arrival sensor
+			arrivalSensorGuis[i] = new JLabel();
+			arrivalSensorGuis[i].setText("Arrival Sensor");
+			arrivalSensorGuis[i].setForeground(Color.BLACK);
+			arrivalSensorGuis[i].setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLACK));
+			
+			floorStatuses[i].add(arrivalSensorGuis[i]);
+			
+			// Setting up layout for floor lamps
+			JPanel floorLampsGrid = new JPanel();
+			floorLampsGrid.setLayout(new GridLayout(floorLampsGuis.length, 1));
 
-		for(int i = 0; i < elevatorFrames.length; i++) {
-			elevatorFrames[i] = new JFrame();
-			elevatorFrames[i].setLayout(new GridLayout(propTitle.length, 1));
-			for(int j = 0; j < propTitle.length;j++) {
-				properties[j] = new JTextArea(propTitle[j]);
-				properties[j].setFont(new Font("Consolas", Font.BOLD, 20));
-				properties[j].setForeground(Color.BLACK);
-				properties[j].setText(propTitle[j]);
-				properties[j].setEditable(false);
-				properties[j].setBackground(bgCol);
-				elevatorFrames[i].add(properties[j]);
+			for(int j = 0; j < floorLampsGuis[i].length;j++) {				
+				floorLampsGuis[i][j] = new JLabel();
+				floorLampsGuis[i][j].setText(String.valueOf(j + 1));
+				floorLampsGuis[i][j].setForeground(Color.BLACK);
+				floorLampsGuis[i][j].setFont(new Font("Consolas", Font.BOLD, 20));
+				floorLampsGuis[i][j].setBackground(bgCol);
+				
+				floorLampsGrid.add(floorLampsGuis[i][j]);
 			}
+			floorStatuses[i].add(floorLampsGrid);
 		}
 	}
 
@@ -303,6 +312,41 @@ public class ElevatorView extends JFrame {
 	}
 	
 	/**
+	 * Updating floor subsystem frames
+	 */
+	private void updateFloorFrames() {
+		for(int i = 0; i < this.floorStatuses.length; i++) {
+			if(this.arrivalSensors == null) {
+				
+			}else {
+				ArrayList<Boolean> sensors = this.arrivalSensors.get(i + 1);
+				if (sensors.contains(true)){
+						this.arrivalSensorGuis[i].setText("Arrival Sensor: ARRIVED");
+						this.arrivalSensorGuis[i].setForeground(Color.GREEN);
+				} else {
+					this.arrivalSensorGuis[i].setText("Arrival Sensor");
+					this.arrivalSensorGuis[i].setForeground(Color.BLACK);
+				}
+			}
+			
+			/*
+			 * light up floor lamps if value is true
+			 * format: {floor_num: {true, false,..., true, false}}
+			 */
+			if(this.floorLamps == null) {
+				Boolean lamps[] = floorLamps.get(i + 1);
+				for(int j = 0; i < lamps.length; j++) {
+					if(lamps[j]) {
+						this.floorLampsGuis[i][j].setForeground(Color.GREEN);
+					} else {
+						this.floorLampsGuis[i][j].setForeground(Color.BLACK);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Placing elevator images in the appropriate spot
 	 */
 	private void placeElevator(int floorNum, int elevatorNum, String imageName) {
@@ -322,6 +366,7 @@ public class ElevatorView extends JFrame {
 		
 		// Update the properties of each floor
 		deserializeFloorSubsystem();
+		updateFloorFrames();
 		
 		// Updating each property of the elevator
 		for (ElevatorData e : elevators) {
