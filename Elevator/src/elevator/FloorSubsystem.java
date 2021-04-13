@@ -215,7 +215,6 @@ public class FloorSubsystem implements Runnable {
 			fos1.close();
 			oos2.close();
 			fos2.close();
-			System.out.printf("Serialized HashMap data is saved in hashmap.ser");
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}

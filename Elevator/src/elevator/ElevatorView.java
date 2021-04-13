@@ -4,7 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ElevatorView extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -29,6 +31,8 @@ public class ElevatorView extends JFrame {
 	final JFrame[] elevatorFrames = new JFrame[r.getNumElevators()];
 	final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
 	private JTextArea properties[];
+	private HashMap<Integer, String> arrivalSensors = null;
+	private HashMap<Integer, String> floorLamps = null;
 
 	public ElevatorView(Scheduler model) {
 		super("Elevator");
@@ -135,6 +139,16 @@ public class ElevatorView extends JFrame {
 			}
 		});
 	}
+	
+	/**
+	 * 
+	 * @param floor
+	 * @param elevator
+	 */
+	public void removeMouseListener(int floor, int elevator){
+		MouseListener[] m = grid[floor][elevator].getMouseListeners();
+		grid[floor][elevator].removeMouseListener(m[0]);
+	}
 
 	/**
 	 * Make floor frames clickable
@@ -177,11 +191,39 @@ public class ElevatorView extends JFrame {
 		});
 	}
 	
-	public void removeMouseListener(int floor, int elevator){
-		MouseListener[] m = grid[floor][elevator].getMouseListeners();
-		grid[floor][elevator].removeMouseListener(m[0]);
+	/**
+	 * 
+	 */
+	private void deserializeFloorSubsystem() {
+		
+//	      try
+//	      {
+//	         FileInputStream fis1= new FileInputStream("arrival_sensors.json");
+//	         FileInputStream fis2= new FileInputStream("floor_lamps.json");
+//	         
+//	         ObjectInputStream ois1 = new ObjectInputStream(fis1);
+//	         ObjectInputStream ois2 = new ObjectInputStream(fis2);
+//	         
+//	         this.arrivalSensors = (HashMap) ois1.readObject();
+//	         this.floorLamps = (HashMap) ois1.readObject();
+//	         
+//	         ois1.close();
+//	         fis1.close();
+//	      }catch(IOException ioe)
+//	      {
+//	         ioe.printStackTrace();
+//	         return;
+//	      }catch(ClassNotFoundException c)
+//	      {
+//	         System.out.println("Class not found");
+//	         c.printStackTrace();
+//	         return;
+//	      }
 	}
-
+	
+	/**
+	 * 
+	 */
 	public void initializeElevatorFrames(){
 		String propTitle[] = {"Timestamp", "Status", "Current Floor", "Destination" };
 		properties = new JTextArea[rows];
@@ -200,26 +242,34 @@ public class ElevatorView extends JFrame {
 			}
 		}
 	}
+	
+	/**
+	 * 
+	 */
+	public void initializeFloorFrames(){
+		String propTitle[] = {"Arrival Sensor", "Floor Lamps" };
+		properties = new JTextArea[rows];
 
-//	HashMap<Integer, String> map = null;
-//    try
-//    {
-//       FileInputStream fis = new FileInputStream("hashmap.ser");
-//       ObjectInputStream ois = new ObjectInputStream(fis);
-//       map = (HashMap) ois.readObject();
-//       ois.close();
-//       fis.close();
-//    }catch(IOException ioe)
-//    {
-//       ioe.printStackTrace();
-//       return;
-//    }catch(ClassNotFoundException c)
-//    {
-//       System.out.println("Class not found");
-//       c.printStackTrace();
-//       return;
-//    }
-//    
+		for(int i = 0; i < elevatorFrames.length; i++) {
+			elevatorFrames[i] = new JFrame();
+			elevatorFrames[i].setLayout(new GridLayout(propTitle.length, 1));
+			for(int j = 0; j < propTitle.length;j++) {
+				properties[j] = new JTextArea(propTitle[j]);
+				properties[j].setFont(new Font("Consolas", Font.BOLD, 20));
+				properties[j].setForeground(Color.BLACK);
+				properties[j].setText(propTitle[j]);
+				properties[j].setEditable(false);
+				properties[j].setBackground(bgCol);
+				elevatorFrames[i].add(properties[j]);
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * @param frameNum
+	 * @param e
+	 */
 	public void updateElevatorFrames(int frameNum,ElevatorData e){
 		JFrame j = elevatorFrames[frameNum];
 		System.out.println("Components: " + j.getContentPane().getComponents().length);
@@ -270,6 +320,9 @@ public class ElevatorView extends JFrame {
 		ArrayList<ElevatorData> elevators = model.getElevators();
 		ArrayList<String> timestamps = model.getTimeStamps();
 		
+		// Update the properties of each floor
+		deserializeFloorSubsystem();
+		
 		// Updating each property of the elevator
 		for (ElevatorData e : elevators) {
 			int num = Integer.parseInt(e.getName().split("Elevator")[1]);
@@ -312,11 +365,6 @@ public class ElevatorView extends JFrame {
 			}
 		}
 	}
-
-	/**
-	 * Setting properties of each elevator
-	 *
-	 */
 
 	public static void main(String[] args) {
 		Scheduler scheduler = new Scheduler();
