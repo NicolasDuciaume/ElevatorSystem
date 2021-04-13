@@ -3,10 +3,9 @@ package elevator;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Random;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Scheduler handles communication between Elevator and Floors using a state
@@ -30,12 +29,14 @@ public class Scheduler {
     private InetAddress addressFloor;
     private ArrayList<ElevatorData> elevators;
     private ArrayList<ElevatorData> elevatorsStuck;
+    private ArrayList<String> timeStamps;
     private int waiting = 0;
     private int elevatorBeingUsed = 0;
     private int maxElevator = 0;
     private int count = 0;
     private String mess;
     private Random rand;
+    private ElevatorView view;
 
     private static ReadPropertyFile r = new ReadPropertyFile();
 
@@ -64,6 +65,9 @@ public class Scheduler {
 
         elevators = new ArrayList<>();
         elevatorsStuck = new ArrayList<>();
+        timeStamps = new ArrayList<>();
+        
+        view = new ElevatorView(this);
 
         try {
             sendReceiveSocketFloor = new DatagramSocket(r.getFloorPort());
@@ -73,6 +77,23 @@ public class Scheduler {
             System.exit(1);
         }
 
+    }
+    
+//    private void setView(ElevatorView e) {
+//    	this.view = e;
+//    }
+
+    public void updateTimeStamp(int elevatorNum){
+        timeStamps.set(elevatorNum,getTime());
+    }
+
+    private String getTime() {
+        Date date = new Date();
+        DateFormat formatter = new SimpleDateFormat("HH:mm:ss.SSS");
+        formatter.setTimeZone(TimeZone.getTimeZone("EST"));
+        String dateFormatted = formatter.format(date);
+
+        return dateFormatted;
     }
 
     /**
@@ -89,7 +110,7 @@ public class Scheduler {
     /**
      * Calls the state machines and update the elevator changes
      */
-    private void sendAndReceive() {
+    public void sendAndReceive() {
         byte[] data = new byte[100];
         receivePacket = new DatagramPacket(data, data.length);
         while (true) {
@@ -113,10 +134,12 @@ public class Scheduler {
                 for (int i = 0; i <= maxElevator; i++) {
                     sendToElevator();
                 }
+                view.refresh();
                 currentState1 = SchedulerStates.STATE_2;
                 break;
             case STATE_2://Send to floor
                 sendToFloor();
+                view.refresh();
                 currentState1 = SchedulerStates.STATE_1;
                 count++;
                 break;
@@ -136,10 +159,12 @@ public class Scheduler {
                         i--;
                     }
                 }
+                view.refresh();
                 currentState2 = SchedulerStates.STATE_2;
                 break;
             case STATE_2: //receive from floor
                 receiveFromFloor(data);
+                view.refresh();
                 currentState2 = SchedulerStates.STATE_1;
                 break;
         }
@@ -169,9 +194,13 @@ public class Scheduler {
                 //Sort the floor request to one of the elevators
                 checkPriority(Integer.parseInt(cut[1]), cut[2], Integer.parseInt(cut[3]));
             } else {//If error than select one of the elevators to handle error
-                int temp = rand.nextInt(elevators.size());
-                System.out.println(temp);
-                elevators.get(temp).setError(Integer.parseInt(cut[1]));//Sets type of error
+            	int temp;
+                do { //looping until it gets an elevator that is not erroring out
+                	temp = rand.nextInt(elevators.size());
+                }while(elevators.get(temp).getError() != 0);
+
+            	elevators.get(temp).setError(Integer.parseInt(cut[1]));//Sets type of error
+
             }
             // TODO: Need to figure out the direction to go to the floor where we pick up
             // people
@@ -186,7 +215,7 @@ public class Scheduler {
      */
     public synchronized boolean receiveFromElevator(byte[] data) {
         //Gets the elevator in use and tries to receive packet
-        ElevatorData temp = elevators.get(elevatorBeingUsed);
+        ElevatorData temp = new ElevatorData(); //elevators.get(elevatorBeingUsed);
         try {
             sendReceiveSocketElevators.receive(receivePacket);
         } catch (IOException e) {
@@ -198,6 +227,15 @@ public class Scheduler {
         String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
         String[] splitElevatorMsg = name.split("-");
         String[] test = mess.split(" "); //split message string into an array of strings
+        
+        // Selecting the correct elevator in use
+        for(ElevatorData e : elevators) {
+        	if(splitElevatorMsg[0].equals(e.getName())) {
+        		temp = e;
+        	}
+        }
+        int elevatorNum = Integer.parseInt(String.valueOf(temp.getName().charAt(temp.getName().length()-1)));
+        timeStamps.set(elevatorNum-1,getTime());
 
         // If message was not blank and was split into an array
         // then append the packet string to the message depending
@@ -226,7 +264,9 @@ public class Scheduler {
                 this.checkPriority(-1, null, Integer.parseInt(splitElevatorMsg[0]));
             } else {//Elevator in a state of in between  movements
                 if (splitElevatorMsg[1].equals("moving")) {//If elevator moving between floor
-                    if (mess.equals("")) {
+                	temp.setStatus("moving");
+                	temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[2]));
+                	if (mess.equals("")) {
                         //if message in empty, set message as data received from elevator
                         mess = mess + splitElevatorMsg[0] + "-moving-" + splitElevatorMsg[2];
                     } else {
@@ -235,7 +275,8 @@ public class Scheduler {
                         waiting--;
                     }
                 } else if (splitElevatorMsg[1].equals("waiting")) { //If elevator waiting for new instruction
-                    waiting++;
+                	temp.setStatus("waiting");
+                	waiting++;
                     if (mess.equals("")) {
                         //if message in empty, set message as data received from elevator
                         mess = mess + splitElevatorMsg[0] + "-waiting";
@@ -245,7 +286,8 @@ public class Scheduler {
                         waiting--;
                     }
                 } else if (splitElevatorMsg[1].equals("door_closing")) { //If elevators door closing
-                    if (mess.equals("")) {
+                	temp.setStatus("door_closing");
+                	if (mess.equals("")) {
                         //if message in empty, set message as data received from elevator
                         mess = mess + splitElevatorMsg[0] + "-door_closing";
                     } else { //if message not empty, append data received from elevator to message
@@ -254,7 +296,8 @@ public class Scheduler {
                     }
 
                 } else if (splitElevatorMsg[1].equals("door_closed")) { //If elevators door closed
-                    if (mess.equals("")) {
+                	temp.setStatus("door_closed");
+                	if (mess.equals("")) {
                         //if message in empty, set message as data received from elevator
                         mess = mess + splitElevatorMsg[0] + "-door_closed-" + splitElevatorMsg[2];
                     } else {
@@ -264,7 +307,8 @@ public class Scheduler {
                     }
 
                 } else if (splitElevatorMsg[1].equals("door_opening")) { //If elevator doors opening
-                    if (mess.equals("")) {
+                	temp.setStatus("door opening");
+                	if (mess.equals("")) {
                         //if message in empty, set message as data received from elevator
                         mess = mess + splitElevatorMsg[0] + "-door_opening";
                     } else {
@@ -273,7 +317,13 @@ public class Scheduler {
                         waiting--;
                     }
                 } else if (splitElevatorMsg[1].equals("error")) {
-                    elevatorsStuck.add(elevators.get(elevatorBeingUsed));
+                	if(temp.getError() == -1) {
+                		temp.setStatus("doors stuck");
+                	}else if(temp.getError() == -2){
+                		temp.setStatus("stuck between floors");
+                		 elevatorsStuck.add(temp);
+                	}
+
                     if (mess.equals("")) {
                         mess = mess + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
                     } else {
@@ -281,9 +331,33 @@ public class Scheduler {
                         mess = mess + " " + splitElevatorMsg[0] + "-error-" + splitElevatorMsg[2];
                         waiting--;
                     }
+                } else if (splitElevatorMsg[1].equals("doorReset")) {
+                	temp.setStatus("doors reset");
+                	temp.setError(0);
+                	System.out.print("got it");
+                    if (mess.equals("")) {
+                        mess = mess + splitElevatorMsg[0] + "-waiting-" + splitElevatorMsg[2];
+                    } else {
+                        //if message not empty, append data received from elevator to message
+                        mess = mess + " " + splitElevatorMsg[0] + "-waiting-" + splitElevatorMsg[2];
+                        waiting--;
+                    }
+                }
+                else if (splitElevatorMsg[1].equals("doorReseting")) {
+                    temp.setStatus("doors reseting");
+                    temp.setError(0);
+                    System.out.print("got it");
+                    if (mess.equals("")) {
+                        mess = mess + splitElevatorMsg[0] + "-waiting-" + splitElevatorMsg[2];
+                    } else {
+                        //if message not empty, append data received from elevator to message
+                        mess = mess + " " + splitElevatorMsg[0] + "-waiting-" + splitElevatorMsg[2];
+                        waiting--;
+                    }
                 }
             }
         } else { // if elevator arrived to floor
+        	temp.setStatus("arrived");
             temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[2]));
             if (mess.equals("")) {  //if message in empty, set message as data received from elevator
                 mess = mess + name;
@@ -332,7 +406,7 @@ public class Scheduler {
     public synchronized void sendToFloor() {
         //create a byte array
         byte[] toSend = new byte[100];
-        System.out.println("Sending");
+//        System.out.println("Sending");
 
         //If all elevator in use than wait
         if (waiting == elevators.size()) {
@@ -365,15 +439,20 @@ public class Scheduler {
 
         if (temp.getError() != 0) { //if sending error to elevator
             String e = "error " + temp.getError();
-            temp.setError(0);
+            if(temp.getError() == -1){
+                temp.setError(0);
+            }
+            //temp.setError(0);
             toSend = e.getBytes();
         } else {//if sending floor request to elevator
             int t = checkSend(temp); //get the floor to visit
+
             if (t == -1) { //if floor to visit is negative then, send wait message to elevator
                 String wait = "waiting";
                 toSend = wait.getBytes();
             } else { //if floor to visit is a valid floor than send direction and floor to the elevator
                 String dat = t + " " + temp.getDirection();
+                temp.addDestination(t);
                 toSend = dat.getBytes();
             }
         }
@@ -632,10 +711,14 @@ public class Scheduler {
                 System.exit(1);
             }
             String name = new String(receivePacket.getData(), 0, this.receivePacket.getLength());
-            elevators.add(new ElevatorData(name, receivePacket.getPort(), receivePacket.getAddress(), 0));
+            elevators.add(new ElevatorData(name, receivePacket.getPort(), receivePacket.getAddress(), 1));
             if (elevators.size() == numOfElevators) {
                 break;
             }
+        }
+
+        for(int i = 0; i < elevators.size(); i++){
+            timeStamps.add(getTime());
         }
 
         //prints out the floor and elevator ports and address
@@ -727,6 +810,10 @@ public class Scheduler {
         this.elevators = e;
     }
 
+    public ArrayList<String> getTimeStamps() {
+        return timeStamps;
+    }
+
     /**
      * Initializes and runs the thread
      *
@@ -734,8 +821,12 @@ public class Scheduler {
      */
     public static void main(String[] args) {
         Scheduler scheduler = new Scheduler();
+        
+//        ElevatorView e = new ElevatorView(scheduler);
 
+//        scheduler.setView(e);
         scheduler.InitializePort(r.getNumElevators());
         scheduler.sendAndReceive();
+
     }
 }

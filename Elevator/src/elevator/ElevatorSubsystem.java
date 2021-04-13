@@ -1,8 +1,10 @@
 package elevator;
 
 
+
 import java.io.IOException;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -37,7 +39,7 @@ public class ElevatorSubsystem implements Runnable {
     private int currFloor, destFloor;
     private int errorSelect = 0;
 
-    //Variable sto read config file
+    //Variables to read config file
     private static ReadPropertyFile r = new ReadPropertyFile();
     private static long time_open_close_doors = r.getTimeToOpenCloseDoors();
     private static long time_between_floors = r.getTimeBetweenFloors();
@@ -102,7 +104,6 @@ public class ElevatorSubsystem implements Runnable {
             e.printStackTrace();
             System.exit(1);
         }
-
     }
 
     /**
@@ -139,7 +140,7 @@ public class ElevatorSubsystem implements Runnable {
         switch (currentState) {
             case INITIAL_STATE: // Elevator stopped with doors open
 
-                //create a byte array and try to reciev packet
+                //create a byte array and try to receive packet
                 byte[] data = new byte[100];
                 receivePacket = new DatagramPacket(data, data.length);
                 try {
@@ -163,15 +164,14 @@ public class ElevatorSubsystem implements Runnable {
                     //Sending the name of the elevator and "waiting" message back so that scheduler know which elevator is available
                     String elevatorWithRequest = name + "-" + receivePacketData;
                     sendElevatorMessage(elevatorWithRequest);
-                    countWaiting++;
-                    //if (countWaiting >= 10)
-                    //System.exit(0);
+
                 } else {
                     String[] temp = receivePacketData.split(" ");
                     if (temp[0].equals("error")) { //if received error
                         errorSelect = Integer.parseInt(temp[1]);
                         //go to state 5
                         currentState = ElevatorStates.STATE_5;
+                        time = System.nanoTime();
                         break;
                     }
                     //change state
@@ -252,7 +252,7 @@ public class ElevatorSubsystem implements Runnable {
                     motorState = Direction.STOPPED;
                     directionLamp = motorState;
 
-                    //Send to schedular with arrive info
+                    //Send to scheduler with arrive info
                     this.currFloor = Integer.parseInt(this.packetString[0]);
                     String msg = name + "-arrived-" + this.packetString[0];
                     sendElevatorMessage(msg);
@@ -271,17 +271,28 @@ public class ElevatorSubsystem implements Runnable {
                 break;
             case STATE_5: //Error Handling
                 if (errorSelect == -1) { // If error is door is stuck
-                    //Send to scheduler: attempting to close door
-                    System.out.println(name + " door closing");
-                    String msg1 = name + "-door_closing";
-                    sendElevatorMessage(msg1);
-                    //Simulate door stuck and reset
+                    
+                	String msg2;
+                	
+                	//Simulate door stuck and reset 
+                	System.out.println(name + " door closing");
                     System.out.println(name + " Door is stuck");
-                    System.out.println(name + " reseting Door");
+                                     
+                	//Timing for the error
+                    if (System.nanoTime() < (time_open_close_doors + time)) { //if doors fully reset
+                        System.out.println(name + " reseting Door");
+                        msg2 =  name + "-doorReseting-" + this.currFloor;
+                        sendElevatorMessage(msg2);
+                        //Recursively set the same state till doors are completely open
+                        currentState = ElevatorStates.STATE_5;
 
-                    //go back to initial state, to recieve further instructions
-                    currentState = ElevatorStates.INITIAL_STATE;
-                    break;
+                    } else {//Keep sending doors opening to scheduler till the doors are fully open
+                        msg2 =  name + "-doorReset-" + this.currFloor;
+                        errorSelect = 0;
+                        currentState = ElevatorStates.INITIAL_STATE;
+                        sendElevatorMessage(msg2);
+                    }
+
                 } else if (errorSelect == -2) {//if fatal error: stuck between floors
                     //Send the data to the scheduler about which floor is elevator stuck on
                     System.out.println(name + " Stuck at floor " + this.currFloor);
@@ -297,7 +308,9 @@ public class ElevatorSubsystem implements Runnable {
     }
 
     private void sendElevatorMessage(String elevatorWithRequest) {
-        byte[] toSend = elevatorWithRequest.getBytes();
+//    	String msg = elevatorWithRequest + "-" + String.valueOf(new Timestamp(System.currentTimeMillis()));
+//        byte[] toSend = msg.getBytes();
+    	byte[] toSend = elevatorWithRequest.getBytes();
         try {
             this.sendPacket = new DatagramPacket(toSend, toSend.length, InetAddress.getLocalHost(), r.getElevatorPort());
         } catch (UnknownHostException e) {
