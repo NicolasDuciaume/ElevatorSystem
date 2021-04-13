@@ -53,6 +53,7 @@ public class FloorSubsystem implements Runnable {
 			}
 			arrivalSensors.put(i + 1, b);
 		}
+		this.serialize();
 
 		this.addFloorRequest(FileLocation);
 		FloorRequest floorRequest = listofRequests.get(listofRequests.size() - 1);
@@ -211,10 +212,12 @@ public class FloorSubsystem implements Runnable {
 			oos1.writeObject(this.arrivalSensors);
 			oos2.writeObject(this.floorLamps);
 
-			oos1.close();
 			fos1.close();
-			oos2.close();
 			fos2.close();
+			
+			oos1.close();
+			oos2.close();
+			
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}

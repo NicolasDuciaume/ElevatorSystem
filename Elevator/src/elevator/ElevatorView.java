@@ -31,9 +31,11 @@ public class ElevatorView extends JFrame {
 	final JFrame[] elevatorFrames = new JFrame[r.getNumElevators()];
 	final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
 	private JTextArea properties[];
-	private JLabel floorLampsGuis[][] = new JLabel[rows][rows];
-	private JLabel arrivalSensorGuis[] = new JLabel[rows];
+	private JLabel floorLampsGuis[][] = new JLabel[r.getNumFloors()][2];
+	private JLabel arrivalSensorGuis[] = new JLabel[r.getNumFloors()];
+	// <elevator, floorArrival sensor that the elevator has arrived at
 	private HashMap<Integer, ArrayList<Boolean>> arrivalSensors = null;
+	// <elevator, {Up, Down}>
 	private HashMap<Integer, Boolean[]> floorLamps = null;
 
 	public ElevatorView(Scheduler model) {
@@ -94,9 +96,7 @@ public class ElevatorView extends JFrame {
 			addElevatorMouseListener(rows-1,i+1);
 		}
 
-//		final JFrame[] floorStatuses = new JFrame[r.getNumFloors()];
 		for(int i = 0; i < floorStatuses.length; i++){
-			floorStatuses[i] = new JFrame();
 			addFloorMouseListener(i);
 		}
 	}
@@ -203,7 +203,6 @@ public class ElevatorView extends JFrame {
 	         this.arrivalSensors = (HashMap) ois1.readObject();
 	         this.floorLamps = (HashMap) ois2.readObject();
 	         
-	         
 	         fis1.close();
 	         fis2.close();
 	         
@@ -211,13 +210,12 @@ public class ElevatorView extends JFrame {
 	         ois2.close();
 	         
 	      }catch(Exception e) {
-	         e.printStackTrace();
-	         return;
+	         this.deserializeFloorSubsystem();
 	      }
 	}
 	
 	/**
-	 * 
+	 * Initialize elevator frames
 	 */
 	public void initializeElevatorFrames(){
 		String propTitle[] = {"Timestamp", "Status", "Current Floor", "Destination" };
@@ -239,21 +237,23 @@ public class ElevatorView extends JFrame {
 	}
 	
 	/**
-	 * 
+	 * Initialize floor subsystem frames
 	 */
 	public void initializeFloorFrames(){
-		String propTitle[] = {"Arrival Sensor", "Floor Lamps" };
-		
-		for(int i = 0; i < floorStatuses.length; i++) {
+		String lampNames[] = {"UP", "DOWN"};
+		for(int i = 0; i < floorStatuses.length; i++) {			
 			floorStatuses[i] = new JFrame();
-			floorStatuses[i].setLayout(new GridLayout(propTitle.length, 1));
+			floorStatuses[i].setLayout(new GridLayout(3, 1));
 			floorStatuses[i].setBackground(this.bgCol);
 			
 			// Setting up arrival sensor
 			arrivalSensorGuis[i] = new JLabel();
 			arrivalSensorGuis[i].setText("Arrival Sensor");
 			arrivalSensorGuis[i].setForeground(Color.BLACK);
-			arrivalSensorGuis[i].setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLACK));
+			arrivalSensorGuis[i].setFont(new Font("Consolas", Font.BOLD, 20));
+			arrivalSensorGuis[i].setHorizontalAlignment(SwingConstants.CENTER);
+			arrivalSensorGuis[i].setVerticalAlignment(SwingConstants.CENTER);
+			arrivalSensorGuis[i].setOpaque(false);
 			
 			floorStatuses[i].add(arrivalSensorGuis[i]);
 			
@@ -263,14 +263,15 @@ public class ElevatorView extends JFrame {
 
 			for(int j = 0; j < floorLampsGuis[i].length;j++) {				
 				floorLampsGuis[i][j] = new JLabel();
-				floorLampsGuis[i][j].setText(String.valueOf(j + 1));
+				floorLampsGuis[i][j].setText(lampNames[j]);
 				floorLampsGuis[i][j].setForeground(Color.BLACK);
 				floorLampsGuis[i][j].setFont(new Font("Consolas", Font.BOLD, 20));
-				floorLampsGuis[i][j].setBackground(bgCol);
-				
-				floorLampsGrid.add(floorLampsGuis[i][j]);
+				floorLampsGuis[i][j].setOpaque(false);
+				floorLampsGuis[i][j].setHorizontalAlignment(SwingConstants.CENTER);
+				floorLampsGuis[i][j].setVerticalAlignment(SwingConstants.CENTER);
+				floorStatuses[i].add(floorLampsGuis[i][j]);
 			}
-			floorStatuses[i].add(floorLampsGrid);
+			
 		}
 	}
 
@@ -292,40 +293,39 @@ public class ElevatorView extends JFrame {
 		update[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
 		update[2].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
 
-//		properties[0].setText("Timestamp: " + e.getTimestamp());
-//		properties[1].setText("Status: " + e.getStatus() + " at " + String.valueOf(e.getCurrentFloor()));
-//		properties[2].setText("Current Floor: " + String.valueOf(e.getCurrentFloor()));
-
 		System.out.println("setting destination");
 		if(e.getDestination() != -1) {
 			System.out.println("dest is not -1");
 			update[3].setText("Destination: " + e.getDestination());
-//			properties[3].setText("Destination: " + e.getDestination());
 		}else {
 			System.out.println("dest is -1");
 			update[3].setText("Destination: None");
-//			properties[3].setText("Destination: None");
 		}
-//		for(int i = 0; i < properties.length; i++){
-//			elevatorFrames[frameNum].add(properties[i]);
-//		}
 	}
 	
 	/**
 	 * Updating floor subsystem frames
+	 * 
+	 * // <elevator, floorArrival sensors that the elevator has arrived at>
+	 * private HashMap<Integer, ArrayList<Boolean>> arrivalSensors = null;
+	 * 
+	 * // <elevator, {Up, Down}>
+	 * private HashMap<Integer, Boolean[]> floorLamps = null;
 	 */
 	private void updateFloorFrames() {
 		for(int i = 0; i < this.floorStatuses.length; i++) {
 			if(this.arrivalSensors == null) {
 				
 			}else {
-				ArrayList<Boolean> sensors = this.arrivalSensors.get(i + 1);
-				if (sensors.contains(true)){
+				for(int j = 0; j < this.arrivalSensors.size(); j++) {
+					ArrayList<Boolean> sensors = this.arrivalSensors.get(j);
+					if (sensors.get(i)){
 						this.arrivalSensorGuis[i].setText("Arrival Sensor: ARRIVED");
 						this.arrivalSensorGuis[i].setForeground(Color.GREEN);
 				} else {
 					this.arrivalSensorGuis[i].setText("Arrival Sensor");
 					this.arrivalSensorGuis[i].setForeground(Color.BLACK);
+				}
 				}
 			}
 			
