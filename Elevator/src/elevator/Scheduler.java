@@ -358,6 +358,7 @@ public class Scheduler {
             }
         } else { // if elevator arrived to floor
         	temp.setStatus("arrived");
+        	temp.setStartFloor(Integer.parseInt(splitElevatorMsg[2]));
             temp.setCurrentFloor(Integer.parseInt(splitElevatorMsg[2]));
             if (mess.equals("")) {  //if message in empty, set message as data received from elevator
                 mess = mess + name;

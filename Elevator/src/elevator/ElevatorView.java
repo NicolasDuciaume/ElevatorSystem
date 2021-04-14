@@ -360,7 +360,7 @@ public class ElevatorView extends JFrame {
 			 */
 
 
-			if (!this.floorLamps.isEmpty()) {
+			/*if (!this.floorLamps.isEmpty()) {
 				//System.out.println(this.floorLamps.get(0));
 				Boolean[] lamps = new Boolean[2];
 				for (int j = 1; j <= this.floorLamps.size(); j++) {
@@ -378,7 +378,7 @@ public class ElevatorView extends JFrame {
 						}
 
 				}
-			}
+			}*/
 		}
 	}
 
@@ -400,6 +400,7 @@ public class ElevatorView extends JFrame {
 		ArrayList<ElevatorData> elevators = model.getElevators();
 		ArrayList<String> timestamps = model.getTimeStamps();
 
+
 		// Update the properties of each floor
 		deserializeFloorSubsystem();
 		updateFloorFrames();
@@ -413,6 +414,20 @@ public class ElevatorView extends JFrame {
 			if (e.getDestination() != -1) {
 				grid[rows - e.getDestination()][num].setBackground(Color.YELLOW);
 				grid[rows - e.getDestination()][num].setOpaque(true);
+
+				if(e.getCurrentFloor() == e.getStartFloor()){
+					if(e.getDestination() > e.getStartFloor()){
+						this.floorLampsGuis[rows-(e.getStartFloor())][0].setForeground(Color.GREEN);
+					}
+					else{
+						this.floorLampsGuis[rows-(e.getStartFloor())][1].setForeground(Color.GREEN);
+					}
+				}
+				else
+				{
+					this.floorLampsGuis[rows-(e.getStartFloor())][1].setForeground(Color.BLACK);
+					this.floorLampsGuis[rows-(e.getStartFloor())][0].setForeground(Color.BLACK);
+				}
 			}
 
 			if (e.getStatus().contains("doors")) {

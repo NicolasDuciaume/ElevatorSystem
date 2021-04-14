@@ -16,7 +16,7 @@ public class ElevatorData {
 	private InetAddress address;
 	private ArrayList<Integer> upQueue;
 	private ArrayList<Integer> downQueue;
-	private int currentFloor, currDestination;
+	private int currentFloor, currDestination, startFloor;
 	private Direction direction;
 	private ReadPropertyFile r;
 	private boolean elevatorLampArray[];
@@ -42,6 +42,7 @@ public class ElevatorData {
 		downQueue = new ArrayList<>();
 		destinations = new ArrayList<>();
 		this.currentFloor = currentFloor;
+		this.startFloor = 1;
 		this.currDestination = -1;
 		direction = Direction.STOPPED;
 		r = new ReadPropertyFile();
@@ -73,6 +74,14 @@ public class ElevatorData {
 	 */
 	public int getError() {
 		return error;
+	}
+
+	public int getStartFloor() {
+		return startFloor;
+	}
+
+	public void setStartFloor(int startFloor) {
+		this.startFloor = startFloor;
 	}
 
 	/**
