@@ -354,31 +354,6 @@ public class ElevatorView extends JFrame {
 				}
 			}
 
-			/*
-			 * light up floor lamps if value is true format: {floor_num: {true, false,...,
-			 * true, false}}
-			 */
-
-
-			/*if (!this.floorLamps.isEmpty()) {
-				//System.out.println(this.floorLamps.get(0));
-				Boolean[] lamps = new Boolean[2];
-				for (int j = 1; j <= this.floorLamps.size(); j++) {
-						lamps[0] = floorLamps.get(j)[0];
-						lamps[1] = floorLamps.get(j)[1];
-						if (lamps[0]) {
-							this.floorLampsGuis[i][0].setForeground(Color.GREEN);
-						} else {
-							this.floorLampsGuis[i][0].setForeground(Color.BLACK);
-						}
-						if (lamps[1]) {
-							this.floorLampsGuis[i][1].setForeground(Color.GREEN);
-						} else {
-							this.floorLampsGuis[i][1].setForeground(Color.BLACK);
-						}
-
-				}
-			}*/
 		}
 	}
 
@@ -415,6 +390,7 @@ public class ElevatorView extends JFrame {
 				grid[rows - e.getDestination()][num].setBackground(Color.YELLOW);
 				grid[rows - e.getDestination()][num].setOpaque(true);
 
+				//Lights up the direction lights at floor receiving the command
 				if(e.getCurrentFloor() == e.getStartFloor()){
 					if(e.getDestination() > e.getStartFloor()){
 						this.floorLampsGuis[rows-(e.getStartFloor())][0].setForeground(Color.GREEN);

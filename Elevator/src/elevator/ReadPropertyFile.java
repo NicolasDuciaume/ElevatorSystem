@@ -93,4 +93,6 @@ public class ReadPropertyFile {
     public String getJsonPath() {
         return this.property.getProperty("json_path");
     }
+
+    public int getIp(){return Integer.parseInt(this.property.getProperty("ip_address"));}
 }
